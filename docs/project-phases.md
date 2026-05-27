@@ -9,7 +9,7 @@ Tasks marked with tests list the Pest feature/unit test functions to be generate
 
 ---
 
-## Phase 1: Foundation
+## Phase 1: DB Structure
 
 ### Phase 1.1 — Project & Package Setup ✅
 
@@ -19,44 +19,529 @@ Laravel 12 project initialised. All required packages installed:
 `simplesoftwareio/simple-qrcode ^4.2`, `pestphp/pest ^3.0`,
 `pestphp/pest-plugin-laravel ^3.0`.
 
-### Phase 1.2 — Database Migrations ✅
+`spatie/laravel-medialibrary` must be installed before Phase 1.3 runs.
 
-All 9 domain migrations created and run successfully. Tables:
+### Phase 1.2 — Base Database Migrations ✅
+
+All 9 domain migrations created. Tables:
 `users` (extended), `departments`, `students`, `faculty`, `security_policies`,
 `system_settings`, `data_retention_policies`, `admin_role_assignments`,
 `courses`, `class_groups`, `rooms`, `timetables`, `enrollments`,
 `device_registrations`, `attendance_sessions`, `attendance_records`,
 `session_exports`, `proxy_flags`, `audit_logs`.
 
-### Phase 1.3 — Default Settings Seeder ✅
+**Note:** These migrations contain `enum` columns that must be amended in Phase 1.3.
+`timetables.day_of_week` is intentionally left as `enum` — its values are permanently fixed.
 
-`DefaultSettingsSeeder` seeds the default `SecurityPolicy`, five `SystemSetting`
-keys, and four `DataRetentionPolicy` rows using `updateOrInsert`.
+### Phase 1.3 — Schema Amendment & Media Library ⬜
 
-### Phase 1.4 — Eloquent Models & Factories ⬜
+**Install `spatie/laravel-medialibrary`:**
 
-Create one model per domain table, each with a factory. The `User` model must be
-updated with the new `role`, `status`, and `last_login_at` attributes.
+```bash
+composer require spatie/laravel-medialibrary
+php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServiceProvider" --tag="medialibrary-migrations"
+php artisan migrate
+```
 
-**Models to create:**
-`Department`, `Student`, `Faculty`, `Course`, `ClassGroup`, `Room`, `Timetable`,
-`Enrollment`, `AttendanceSession`, `AttendanceRecord`, `DeviceRegistration`,
-`SessionExport`, `SecurityPolicy`, `SystemSetting`, `DataRetentionPolicy`,
-`AdminRoleAssignment`, `ProxyFlag`, `AuditLog`
+**Create one amendment migration** (`amend_enum_columns_to_string`) that converts every
+`enum` column (except `timetables.day_of_week`) to `string` with a `->comment()` documenting
+the expected values. Each comment serves as documentation until a PHP Enum is applied at the
+model level.
 
-**Model requirements:**
-- `$fillable` on every model
-- `casts()` method for enums, booleans, JSON, timestamps, and decimals
-- All `belongsTo` / `hasMany` / `hasOne` relationships declared with return type hints
-- Soft deletes on `Student` and `Course`
-- Local scope `SecurityPolicy::active()` → `where('is_active', true)`
-- Local scope `ProxyFlag::pending()` → `where('review_status', 'pending')`
-- `AuditLog::record(string $action, Model $entity, array $oldValues, array $newValues)` static helper
-- `SystemSetting::get(string $key, mixed $default = null)` and `SystemSetting::set(string $key, mixed $value)` static helpers
+Columns to amend:
+
+| Table | Column | Comment (expected values) |
+|---|---|---|
+| `users` | `role` | `super_admin,admin,faculty,student` |
+| `users` | `status` | `active,suspended,inactive` |
+| `students` | `status` | `active,suspended,graduated,dropped` |
+| `faculty` | `status` | `active,on_leave,inactive` |
+| `admin_role_assignments` | `role` | `admin,faculty` |
+| `enrollments` | `status` | `active,dropped,completed` |
+| `attendance_sessions` | `status` | `pending,active,paused,closed` |
+| `attendance_records` | `status` | `present,late,absent,pending_review,rejected` |
+| `session_exports` | `format` | `pdf,csv,xlsx` |
+| `session_exports` | `status` | `pending,processing,ready,failed` |
+| `proxy_flags` | `severity` | `low,medium,high,critical` |
+| `proxy_flags` | `review_status` | `pending,approved,rejected` |
+
+`timetables.day_of_week` remains `enum` — the 7 day values will never change.
+
+**Tests:** `tests/Feature/Migrations/SchemaAmendmentTest.php`
+- `test_users_role_column_is_string_type()`
+- `test_users_status_column_is_string_type()`
+- `test_timetables_day_of_week_remains_enum()`
+
+### Phase 1.4 — PHP Enum Classes ⬜
+
+Create one backed string enum per domain concept in `app/Enums/`.
+
+| File | Cases |
+|---|---|
+| `UserRole.php` | `SuperAdmin='super_admin'`, `Admin='admin'`, `Faculty='faculty'`, `Student='student'` |
+| `UserStatus.php` | `Active='active'`, `Suspended='suspended'`, `Inactive='inactive'` |
+| `StudentStatus.php` | `Active='active'`, `Suspended='suspended'`, `Graduated='graduated'`, `Dropped='dropped'` |
+| `FacultyStatus.php` | `Active='active'`, `OnLeave='on_leave'`, `Inactive='inactive'` |
+| `AdminAssignmentRole.php` | `Admin='admin'`, `Faculty='faculty'` |
+| `EnrollmentStatus.php` | `Active='active'`, `Dropped='dropped'`, `Completed='completed'` |
+| `SessionStatus.php` | `Pending='pending'`, `Active='active'`, `Paused='paused'`, `Closed='closed'` |
+| `AttendanceStatus.php` | `Present='present'`, `Late='late'`, `Absent='absent'`, `PendingReview='pending_review'`, `Rejected='rejected'` |
+| `ExportFormat.php` | `Pdf='pdf'`, `Csv='csv'`, `Xlsx='xlsx'` |
+| `ExportStatus.php` | `Pending='pending'`, `Processing='processing'`, `Ready='ready'`, `Failed='failed'` |
+| `ProxySeverity.php` | `Low='low'`, `Medium='medium'`, `High='high'`, `Critical='critical'` |
+| `ReviewStatus.php` | `Pending='pending'`, `Approved='approved'`, `Rejected='rejected'` |
+| `DayOfWeek.php` | `Monday='monday'` … `Sunday='sunday'` (mirrors the enum in `timetables`) |
+
+**Tests:** `tests/Unit/Enums/EnumTest.php`
+- `test_user_role_enum_backed_values_match_expected_strings()`
+- `test_user_status_enum_backed_values_match_expected_strings()`
+- `test_attendance_status_has_pending_review_case()`
+- `test_day_of_week_has_seven_cases()`
+
+### Phase 1.5 — Eloquent Models ⬜
+
+Create all models via `php artisan make:model`. Every model must define `$fillable` and a
+`casts()` method (not the `$casts` property). Relationships must have return type hints.
+`spatie/laravel-medialibrary` must be installed (Phase 1.3) before creating models that
+implement `HasMedia`.
+
+---
+
+**`User`** — update existing `app/Models/User.php`
+
+Add to `$fillable`: `role`, `status`, `last_login_at`
+
+```php
+protected function casts(): array
+{
+    return [
+        'role'              => UserRole::class,
+        'status'            => UserStatus::class,
+        'last_login_at'     => 'datetime',
+        'email_verified_at' => 'datetime',
+        'password'          => 'hashed',
+    ];
+}
+```
+
+Relationships:
+- `student(): HasOne` → `Student`
+- `faculty(): HasOne` → `Faculty`
+- `adminRoleAssignments(): HasMany` → `AdminRoleAssignment`
+- `activeAdminAssignment(): HasOne` → `AdminRoleAssignment` scoped `whereNull('revoked_at')->latestOfMany('assigned_at')`
+- `deviceRegistrations(): HasMany` → `DeviceRegistration`
+- `auditLogs(): HasMany` → `AuditLog` (FK: `actor_id`)
+
+---
+
+**`Department`** — `app/Models/Department.php`
+
+`$fillable`: `name`, `code`, `head_faculty_id`, `is_active`
+
+```php
+protected function casts(): array
+{
+    return ['is_active' => 'boolean'];
+}
+```
+
+Relationships:
+- `headFaculty(): BelongsTo` → `Faculty` (FK: `head_faculty_id`)
+- `students(): HasMany` → `Student`
+- `faculty(): HasMany` → `Faculty`
+- `courses(): HasMany` → `Course`
+
+---
+
+**`Student`** — `app/Models/Student.php`
+
+Uses: `SoftDeletes`
+
+`$fillable`: `user_id`, `department_id`, `roll_no`, `batch_year`, `section`, `status`
+
+```php
+protected function casts(): array
+{
+    return ['status' => StudentStatus::class];
+}
+```
+
+Relationships:
+- `user(): BelongsTo` → `User`
+- `department(): BelongsTo` → `Department`
+- `enrollments(): HasMany` → `Enrollment`
+- `attendanceRecords(): HasMany` → `AttendanceRecord`
+
+---
+
+**`Faculty`** — `app/Models/Faculty.php`
+
+`$fillable`: `user_id`, `department_id`, `employee_code`, `designation`, `status`
+
+```php
+protected function casts(): array
+{
+    return ['status' => FacultyStatus::class];
+}
+```
+
+Relationships:
+- `user(): BelongsTo` → `User`
+- `department(): BelongsTo` → `Department`
+- `timetables(): HasMany` → `Timetable`
+- `attendanceSessions(): HasMany` → `AttendanceSession`
+
+---
+
+**`Course`** — `app/Models/Course.php`
+
+Uses: `SoftDeletes`
+
+`$fillable`: `department_id`, `code`, `name`, `semester`, `credits`, `min_attendance_pct`
+
+```php
+protected function casts(): array
+{
+    return ['min_attendance_pct' => 'decimal:2'];
+}
+```
+
+Relationships:
+- `department(): BelongsTo` → `Department`
+- `classGroups(): HasMany` → `ClassGroup`
+- `enrollments(): HasMany` → `Enrollment`
+- `timetables(): HasMany` → `Timetable`
+- `attendanceSessions(): HasMany` → `AttendanceSession`
+
+---
+
+**`ClassGroup`** — `app/Models/ClassGroup.php`
+
+`$fillable`: `course_id`, `name`
+
+Relationships:
+- `course(): BelongsTo` → `Course`
+- `enrollments(): HasMany` → `Enrollment`
+- `timetables(): HasMany` → `Timetable`
+- `attendanceSessions(): HasMany` → `AttendanceSession`
+
+---
+
+**`Room`** — `app/Models/Room.php`
+
+`$fillable`: `name`, `building`, `capacity`, `latitude`, `longitude`, `geofence_radius_m`,
+`beacon_id`, `wifi_ssid`, `is_active`
+
+```php
+protected function casts(): array
+{
+    return [
+        'latitude'  => 'decimal:7',
+        'longitude' => 'decimal:7',
+        'is_active' => 'boolean',
+    ];
+}
+```
+
+Relationships:
+- `timetables(): HasMany` → `Timetable`
+- `attendanceSessions(): HasMany` → `AttendanceSession`
+
+---
+
+**`Timetable`** — `app/Models/Timetable.php`
+
+`$fillable`: `course_id`, `class_group_id`, `faculty_id`, `room_id`, `day_of_week`,
+`start_time`, `end_time`, `effective_from`, `effective_until`
+
+```php
+protected function casts(): array
+{
+    return [
+        'day_of_week'     => DayOfWeek::class,
+        'effective_from'  => 'date',
+        'effective_until' => 'date',
+    ];
+}
+```
+
+Relationships:
+- `course(): BelongsTo` → `Course`
+- `classGroup(): BelongsTo` → `ClassGroup`
+- `faculty(): BelongsTo` → `Faculty`
+- `room(): BelongsTo` → `Room`
+
+---
+
+**`Enrollment`** — `app/Models/Enrollment.php`
+
+`$fillable`: `student_id`, `course_id`, `class_group_id`, `status`, `enrolled_at`
+
+```php
+protected function casts(): array
+{
+    return [
+        'status'      => EnrollmentStatus::class,
+        'enrolled_at' => 'datetime',
+    ];
+}
+```
+
+Relationships:
+- `student(): BelongsTo` → `Student`
+- `course(): BelongsTo` → `Course`
+- `classGroup(): BelongsTo` → `ClassGroup`
+- `attendanceRecords(): HasMany` → `AttendanceRecord`
+
+---
+
+**`DeviceRegistration`** — `app/Models/DeviceRegistration.php`
+
+`$fillable`: `user_id`, `device_fingerprint`, `device_name`, `platform`, `app_version`,
+`is_trusted`, `last_seen_at`
+
+```php
+protected function casts(): array
+{
+    return [
+        'is_trusted'   => 'boolean',
+        'last_seen_at' => 'datetime',
+    ];
+}
+```
+
+Relationships:
+- `user(): BelongsTo` → `User`
+- `attendanceRecords(): HasMany` → `AttendanceRecord` (FK: `device_id`)
+
+---
+
+**`AttendanceSession`** — `app/Models/AttendanceSession.php`
+
+`uuid` must be auto-generated on create via the model's `booted()` method:
+```php
+protected static function booted(): void
+{
+    static::creating(fn (self $session) => $session->uuid ??= (string) Str::uuid());
+}
+```
+
+`$fillable`: `faculty_id`, `course_id`, `class_group_id`, `room_id`, `timetable_id`,
+`status`, `started_at`, `closed_at`, `close_reason`, `total_enrolled`, `total_present`,
+`total_late`, `total_absent`
+
+```php
+protected function casts(): array
+{
+    return [
+        'status'     => SessionStatus::class,
+        'started_at' => 'datetime',
+        'closed_at'  => 'datetime',
+    ];
+}
+```
+
+Relationships:
+- `faculty(): BelongsTo` → `Faculty`
+- `course(): BelongsTo` → `Course`
+- `classGroup(): BelongsTo` → `ClassGroup`
+- `room(): BelongsTo` → `Room`
+- `timetable(): BelongsTo` → `Timetable`
+- `attendanceRecords(): HasMany` → `AttendanceRecord` (FK: `session_id`)
+- `sessionExports(): HasMany` → `SessionExport`
+
+---
+
+**`AttendanceRecord`** — `app/Models/AttendanceRecord.php`
+
+Implements `Spatie\MediaLibrary\HasMedia`, uses `Spatie\MediaLibrary\InteractsWithMedia`.
+Register a media collection `evidence_files` in `registerMediaCollections()`.
+
+`$fillable`: `session_id`, `student_id`, `enrollment_id`, `status`, `marked_at`, `risk_score`,
+`latitude`, `longitude`, `device_id`, `evidence_json`, `override_by`, `override_reason`,
+`overridden_at`
+
+```php
+protected function casts(): array
+{
+    return [
+        'status'        => AttendanceStatus::class,
+        'marked_at'     => 'datetime',
+        'latitude'      => 'decimal:7',
+        'longitude'     => 'decimal:7',
+        'evidence_json' => 'array',
+        'overridden_at' => 'datetime',
+    ];
+}
+```
+
+Relationships:
+- `session(): BelongsTo` → `AttendanceSession` (FK: `session_id`)
+- `student(): BelongsTo` → `Student`
+- `enrollment(): BelongsTo` → `Enrollment`
+- `device(): BelongsTo` → `DeviceRegistration` (FK: `device_id`)
+- `overriddenBy(): BelongsTo` → `User` (FK: `override_by`)
+- `proxyFlags(): HasMany` → `ProxyFlag`
+
+---
+
+**`SessionExport`** — `app/Models/SessionExport.php`
+
+`$fillable`: `session_id`, `requested_by`, `format`, `status`, `file_path`, `expires_at`
+
+```php
+protected function casts(): array
+{
+    return [
+        'format'     => ExportFormat::class,
+        'status'     => ExportStatus::class,
+        'expires_at' => 'datetime',
+    ];
+}
+```
+
+Relationships:
+- `session(): BelongsTo` → `AttendanceSession` (FK: `session_id`)
+- `requestedBy(): BelongsTo` → `User` (FK: `requested_by`)
+
+---
+
+**`SecurityPolicy`** — `app/Models/SecurityPolicy.php`
+
+`$fillable`: `policy_name`, `qr_expiry_seconds`, `risk_auto_reject`, `risk_pending_review`,
+`late_threshold_mins`, `geofence_radius_m`, `device_binding_required`, `clock_skew_seconds`,
+`is_active`
+
+```php
+protected function casts(): array
+{
+    return [
+        'device_binding_required' => 'boolean',
+        'is_active'               => 'boolean',
+    ];
+}
+```
+
+Local scope: `active(): Builder` → `where('is_active', true)`
+
+---
+
+**`SystemSetting`** — `app/Models/SystemSetting.php`
+
+`$fillable`: `key`, `value`
+
+Static helpers (caching implementation deferred to Phase 2.3):
+- `get(string $key, mixed $default = null): mixed` — finds by `key`, returns `value` or `$default`
+- `set(string $key, mixed $value): void` — `updateOrCreate(['key' => $key], ['value' => $value])`
+
+---
+
+**`DataRetentionPolicy`** — `app/Models/DataRetentionPolicy.php`
+
+`$fillable`: `entity_type`, `retention_days`, `is_active`, `last_run_at`
+
+```php
+protected function casts(): array
+{
+    return [
+        'is_active'   => 'boolean',
+        'last_run_at' => 'datetime',
+    ];
+}
+```
+
+---
+
+**`AdminRoleAssignment`** — `app/Models/AdminRoleAssignment.php`
+
+`$fillable`: `user_id`, `assigned_by`, `role`, `department_id`, `assigned_at`, `revoked_at`
+
+```php
+protected function casts(): array
+{
+    return [
+        'role'        => AdminAssignmentRole::class,
+        'assigned_at' => 'datetime',
+        'revoked_at'  => 'datetime',
+    ];
+}
+```
+
+Relationships:
+- `user(): BelongsTo` → `User`
+- `assignedBy(): BelongsTo` → `User` (FK: `assigned_by`)
+- `department(): BelongsTo` → `Department`
+
+Local scope: `active(): Builder` → `whereNull('revoked_at')`
+
+---
+
+**`ProxyFlag`** — `app/Models/ProxyFlag.php`
+
+Implements `Spatie\MediaLibrary\HasMedia`, uses `Spatie\MediaLibrary\InteractsWithMedia`.
+Register a media collection `evidence_files` in `registerMediaCollections()`.
+
+`$fillable`: `attendance_record_id`, `severity`, `reason_code`, `risk_score`, `evidence_json`,
+`review_status`, `reviewer_id`, `reviewer_notes`, `reviewed_at`
+
+```php
+protected function casts(): array
+{
+    return [
+        'severity'      => ProxySeverity::class,
+        'review_status' => ReviewStatus::class,
+        'evidence_json' => 'array',
+        'reviewed_at'   => 'datetime',
+    ];
+}
+```
+
+Relationships:
+- `attendanceRecord(): BelongsTo` → `AttendanceRecord`
+- `reviewer(): BelongsTo` → `User` (FK: `reviewer_id`)
+
+Local scope: `pending(): Builder` → `where('review_status', ReviewStatus::Pending)`
+
+---
+
+**`AuditLog`** — `app/Models/AuditLog.php`
+
+`$fillable`: `actor_id`, `actor_role`, `action`, `entity_type`, `entity_id`, `old_values`,
+`new_values`, `ip_address`, `user_agent`
+
+```php
+protected function casts(): array
+{
+    return [
+        'old_values' => 'array',
+        'new_values' => 'array',
+    ];
+}
+```
+
+Relationships:
+- `actor(): BelongsTo` → `User` (FK: `actor_id`)
+
+Static helper:
+```php
+public static function record(
+    string $action,
+    Model $entity,
+    array $oldValues = [],
+    array $newValues = [],
+    ?User $actor = null,
+): self
+```
+Reads `auth()->user()` when `$actor` is null. Reads `request()->ip()` and
+`request()->userAgent()`.
+
+---
 
 **Tests:** `tests/Unit/Models/`
-- `test_user_fillable_includes_role_status_last_login_at()`
-- `test_user_role_cast_to_string()`
+- `test_user_role_cast_returns_user_role_enum()`
+- `test_user_status_cast_returns_user_status_enum()`
+- `test_user_has_one_student()`
+- `test_user_has_one_faculty()`
 - `test_department_has_many_students()`
 - `test_department_has_many_faculty()`
 - `test_department_belongs_to_head_faculty()`
@@ -65,19 +550,128 @@ updated with the new `role`, `status`, and `last_login_at` attributes.
 - `test_faculty_belongs_to_user_and_department()`
 - `test_course_soft_deletes()`
 - `test_enrollment_unique_student_course_constraint()`
-- `test_attendance_session_belongs_to_faculty_course_classgroup()`
-- `test_attendance_record_unique_session_student_constraint()`
+- `test_attendance_session_uuid_is_auto_generated_on_create()`
+- `test_attendance_session_belongs_to_faculty_course_and_class_group()`
+- `test_attendance_record_belongs_to_session_and_student()`
+- `test_attendance_record_implements_has_media()`
+- `test_proxy_flag_implements_has_media()`
 - `test_security_policy_active_scope_returns_only_active_rows()`
+- `test_admin_role_assignment_active_scope_excludes_revoked()`
 - `test_proxy_flag_pending_scope_returns_only_pending_rows()`
 - `test_audit_log_record_creates_row_with_correct_fields()`
 - `test_system_setting_get_returns_value_by_key()`
-- `test_system_setting_set_creates_or_updates_row()`
+- `test_system_setting_get_returns_default_when_key_missing()`
+- `test_system_setting_set_creates_row_when_key_does_not_exist()`
+- `test_system_setting_set_updates_row_when_key_exists()`
 
-### Phase 1.5 — EnsureRole Middleware ⬜
+### Phase 1.6 — Model Factories ⬜
 
-Create `app/Http/Middleware/EnsureRole.php`. Reads `auth()->user()->role`,
-compares against the parameter passed via `EnsureRole::class . ':super_admin'`.
-Returns HTTP 403 if mismatch. Returns HTTP 401 if unauthenticated.
+Create a factory for every model in `database/factories/` via `php artisan make:factory`.
+Follow the existing `UserFactory` as the pattern. Use `fake()` (not `$this->faker`).
+
+---
+
+**`UserFactory`** — extend existing with states:
+- `superAdmin()`, `admin()`, `faculty()`, `student()` — set `role` to the matching `UserRole` value
+- `suspended()` — sets `status = UserStatus::Suspended`
+
+**`DepartmentFactory`**:
+- Default: random `name`, unique 3-letter uppercase `code`, `head_faculty_id = null`, `is_active = true`
+
+**`StudentFactory`**:
+- Default: `user_id` via `UserFactory::student()`, `department_id` via `DepartmentFactory`
+- `roll_no`: year-prefixed padded sequence, e.g. `2024001`
+- States: `active()`, `suspended()`, `graduated()`
+
+**`FacultyFactory`**:
+- Default: `user_id` via `UserFactory::faculty()`, `department_id` via `DepartmentFactory`
+- `employee_code`: e.g. `EMP-` + 4-digit number
+- States: `active()`, `onLeave()`
+
+**`CourseFactory`**:
+- Default: `department_id` via `DepartmentFactory`, `code` = `CS-` + 3-digit number, `min_attendance_pct = 75.00`
+- State: `softDeleted()` — sets `deleted_at = now()`
+
+**`ClassGroupFactory`**:
+- Default: `course_id` via `CourseFactory`, `name` = `Group ` + letter (A–E)
+
+**`RoomFactory`**:
+- Default: `name`, `building`, `capacity = 40`, no geofence coordinates, `is_active = true`
+- State: `withGeofence()` — populates `latitude`, `longitude`, `geofence_radius_m = 50`
+
+**`TimetableFactory`**:
+- Default: all FK relationships via respective factories, random `DayOfWeek` case, valid `start_time` / `end_time`
+
+**`EnrollmentFactory`**:
+- Default: `StudentFactory`, `CourseFactory`, `ClassGroupFactory`, `status = EnrollmentStatus::Active`
+- States: `active()`, `dropped()`, `completed()`
+
+**`DeviceRegistrationFactory`**:
+- Default: `UserFactory`, `device_fingerprint` = UUID, `platform = 'android'`, `is_trusted = false`
+- State: `trusted()`
+
+**`AttendanceSessionFactory`**:
+- Default: `FacultyFactory`, `CourseFactory`, `ClassGroupFactory`, `status = SessionStatus::Pending`
+- States: `pending()`, `active()` (sets `started_at`), `closed()` (sets `started_at`, `closed_at`, counters)
+
+**`AttendanceRecordFactory`**:
+- Default: `AttendanceSessionFactory::active()`, `StudentFactory`, `status = AttendanceStatus::Present`, `risk_score = 0`
+- States: `present()`, `late()`, `pendingReview()`, `rejected()`
+- State: `highRisk()` — sets `risk_score` to 80–100
+
+**`SessionExportFactory`**:
+- Default: `AttendanceSessionFactory`, `UserFactory`, `format = ExportFormat::Pdf`, `status = ExportStatus::Pending`
+- States: `pending()`, `ready()` (sets `file_path`, `expires_at`), `failed()`
+
+**`SecurityPolicyFactory`**:
+- Default: matches `DefaultSettingsSeeder` values, `policy_name = 'default'`, `is_active = true`
+
+**`AdminRoleAssignmentFactory`**:
+- Default: `UserFactory`, `DepartmentFactory`, `role = AdminAssignmentRole::Admin`, `assigned_at = now()`, `revoked_at = null`
+
+**`ProxyFlagFactory`**:
+- Default: `AttendanceRecordFactory::pendingReview()`, `severity = ProxySeverity::Medium`, `review_status = ReviewStatus::Pending`
+- States: `pending()`, `critical()` (severity = Critical, risk_score ≥ 80)
+
+**`AuditLogFactory`**:
+- Default: `UserFactory`, random `action`, `entity_type`, `entity_id`
+
+**Tests:** `tests/Unit/Factories/FactoryTest.php`
+- `test_user_factory_creates_user_with_correct_role_via_state()`
+- `test_student_factory_creates_related_user_and_department()`
+- `test_attendance_session_factory_active_state_sets_started_at()`
+- `test_proxy_flag_factory_critical_state_sets_correct_severity()`
+
+### Phase 1.7 — Seeders 🔧
+
+**`DefaultSettingsSeeder`** ✅ — seeds `SecurityPolicy`, `SystemSetting`, and
+`DataRetentionPolicy` using `updateOrInsert`.
+
+**`DemoDataSeeder`** ⬜ — for local / staging development only, not run in production.
+
+Creates a deterministic fixture set:
+- 1 super admin user
+- 2 departments: `Computer Science (CS)`, `Mathematics (MATH)`
+- 3 faculty users with `Faculty` profiles; one set as `head_faculty` of CS department
+- 20 students spread across both departments with `Student` profiles
+- 3 courses (2 in CS, 1 in MATH), each with 2 `ClassGroup` rows
+- 1 week of `Timetable` entries for CS courses
+- 1 `AttendanceSession` in `closed` state: 10 present + 3 late + 2 pending_review records,
+  plus 2 `ProxyFlag` rows
+- 1 admin user with an `AdminRoleAssignment` for the CS department
+- `AuditLog` rows covering the closed session lifecycle
+
+`DemoDataSeeder` calls `DefaultSettingsSeeder` first. Register it in `DatabaseSeeder::run()`
+behind an `App::isLocal()` guard.
+
+**Tests:** none — demo seeders are verified by running and checking row counts in a local DB.
+
+### Phase 1.8 — EnsureRole Middleware ⬜
+
+Create `app/Http/Middleware/EnsureRole.php`. Reads `auth()->user()->role` (returns a
+`UserRole` enum), compares its value against the parameter passed via
+`EnsureRole::class . ':super_admin'`. Returns HTTP 403 if mismatch. Returns HTTP 401 if
+unauthenticated.
 
 **Tests:** `tests/Feature/Middleware/EnsureRoleTest.php`
 - `test_super_admin_role_passes_super_admin_check()`
@@ -86,10 +680,10 @@ Returns HTTP 403 if mismatch. Returns HTTP 401 if unauthenticated.
 - `test_unauthenticated_user_receives_401()`
 - `test_suspended_user_is_blocked()`
 
-### Phase 1.6 — Filament Panel Providers ⬜
+### Phase 1.9 — Filament Panel Providers ⬜
 
-Configure all three panel providers to spec. The `SuperAdminPanelProvider` stub
-created by artisan needs to be fully replaced.
+Configure all three panel providers. The `SuperAdminPanelProvider` stub needs full
+replacement.
 
 **SuperAdminPanelProvider** (`app/Providers/Filament/SuperAdminPanelProvider.php`):
 - Path: `super-admin`, colour: `Color::Violet`
@@ -819,7 +1413,7 @@ Rate limiting: `throttle:10,1` per student.
 
 | Phase | Tasks | Status |
 |---|---|---|
-| 1 — Foundation | 1.1–1.6 | ✅✅✅⬜⬜🔧 |
+| 1 — DB Structure | 1.1–1.9 | ✅✅⬜⬜⬜⬜🔧⬜⬜ |
 | 2 — Core Services | 2.1–2.4 | ⬜⬜⬜⬜ |
 | 3 — Super Admin Panel | 3.1–3.8 | ⬜⬜⬜⬜⬜⬜⬜⬜ |
 | 4 — Admin Panel | 4.1–4.11 | ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ |
@@ -827,4 +1421,4 @@ Rate limiting: `throttle:10,1` per student.
 | 6 — Background Jobs | 6.1–6.3 | ⬜⬜⬜ |
 | 7 — Student REST API | 7.1–7.3 | ⬜⬜⬜ |
 
-**Total tasks:** 37 (3 complete, 1 partial, 33 pending)
+**Total tasks:** 45 (2 complete, 1 partial, 42 pending)
