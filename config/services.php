@@ -35,4 +35,6 @@ return [
         ],
     ],
 
+    'qr_secret' => env('QR_SECRET', 'changeme'),
+
 ];
