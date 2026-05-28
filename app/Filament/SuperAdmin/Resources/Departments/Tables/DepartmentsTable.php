@@ -24,10 +24,10 @@ class DepartmentsTable
                     ->default('—'),
                 TextColumn::make('students_count')
                     ->label('Students')
-                    ->state(fn ($record) => $record->students()->count()),
+                    ->numeric(),
                 TextColumn::make('faculty_count')
                     ->label('Faculty')
-                    ->state(fn ($record) => $record->faculty()->count()),
+                    ->numeric(),
                 IconColumn::make('is_active')->boolean(),
             ])
             ->filters([

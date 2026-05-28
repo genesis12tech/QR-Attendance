@@ -22,8 +22,10 @@ class DepartmentForm
                 ->unique(ignoreRecord: true),
             Select::make('head_faculty_id')
                 ->label('Head of Faculty')
-                ->options(fn () => Faculty::with('user')->get()->pluck('user.name', 'id'))
+                ->relationship('headFaculty')
+                ->getOptionLabelFromRecordUsing(fn (Faculty $record) => $record->user?->name ?? 'Unknown')
                 ->searchable()
+                ->preload()
                 ->nullable(),
             Toggle::make('is_active')
                 ->default(true),
