@@ -21,7 +21,7 @@ class ListAuditLogs extends ListRecords
                 ->action(function () {
                     $logs = AuditLog::with('actor')->get();
                     $handle = fopen('php://temp', 'r+');
-                    fputcsv($handle, ['Actor', 'Role', 'Action', 'Entity Type', 'Entity ID', 'IP', 'Created At']);
+                    fputcsv($handle, ['Actor', 'Role', 'Action', 'Entity Type', 'Entity ID', 'IP', 'Created At'], escape: '');
                     foreach ($logs as $log) {
                         fputcsv($handle, [
                             $log->actor?->name ?? 'System',
@@ -30,8 +30,8 @@ class ListAuditLogs extends ListRecords
                             $log->entity_type,
                             $log->entity_id,
                             $log->ip_address ?? '',
-                            $log->created_at,
-                        ]);
+                            $log->created_at->toDateTimeString(),
+                        ], escape: '');
                     }
                     rewind($handle);
                     $csv = stream_get_contents($handle);

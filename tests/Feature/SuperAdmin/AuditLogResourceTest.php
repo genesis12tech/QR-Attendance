@@ -46,8 +46,10 @@ test('super_admin_can_view_old_and_new_values_in_modal', function () {
     $this->actingAs($superAdmin);
 
     livewire(ListAuditLogs::class)
-        ->callAction(TestAction::make('view')->table($log))
-        ->assertSuccessful();
+        ->mountAction(TestAction::make('view')->table($log))
+        ->assertSuccessful()
+        ->assertMountedActionModalSeeHtml('Old Name')
+        ->assertMountedActionModalSeeHtml('New Name');
 });
 
 test('super_admin_can_export_audit_log_csv', function () {

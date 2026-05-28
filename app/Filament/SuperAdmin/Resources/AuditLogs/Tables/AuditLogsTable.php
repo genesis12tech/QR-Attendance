@@ -32,11 +32,7 @@ class AuditLogsTable
                 SelectFilter::make('action')
                     ->options(fn () => AuditLog::distinct()->pluck('action', 'action')),
                 SelectFilter::make('actor_role')
-                    ->options([
-                        'super_admin' => 'Super Admin',
-                        'admin' => 'Admin',
-                        'faculty' => 'Faculty',
-                    ]),
+                    ->options(fn () => AuditLog::distinct()->pluck('actor_role', 'actor_role')->filter()->toArray()),
                 Filter::make('created_at')
                     ->form([
                         DatePicker::make('from')->label('From'),
