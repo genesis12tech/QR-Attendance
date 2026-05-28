@@ -1,0 +1,22 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Models\Department;
+use Illuminate\Database\Eloquent\Factories\Factory;
+
+/**
+ * @extends Factory<Department>
+ */
+class DepartmentFactory extends Factory
+{
+    public function definition(): array
+    {
+        return [
+            'name' => fake()->unique()->company(),
+            'code' => strtoupper(fake()->unique()->lexify('???')),
+            'head_faculty_id' => null,
+            'is_active' => true,
+        ];
+    }
+}
