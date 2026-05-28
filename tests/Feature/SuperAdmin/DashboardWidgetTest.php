@@ -8,11 +8,19 @@ use App\Models\AuditLog;
 use App\Models\ProxyFlag;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
 use function Pest\Livewire\livewire;
 
 uses(TestCase::class, LazilyRefreshDatabase::class);
+
+beforeEach(function () {
+    Cache::forget('stat.total_users');
+    Cache::forget('stat.active_sessions');
+    Cache::forget('stat.open_proxy_flags');
+    Cache::forget('stat.departments');
+});
 
 test('stats_overview_widget_renders_for_super_admin', function () {
     $superAdmin = User::factory()->superAdmin()->create();

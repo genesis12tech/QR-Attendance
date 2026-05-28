@@ -30,7 +30,7 @@ class SystemHealthWidget extends Widget
     private function checkRedisConnection(): bool
     {
         try {
-            Cache::store('array')->put('_ping', 1, 1);
+            Cache::store('redis')->put('_health_ping', 1, 1);
 
             return true;
         } catch (\Throwable) {

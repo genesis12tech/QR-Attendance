@@ -13,7 +13,7 @@ class AttendanceTrendChartWidget extends ChartWidget
     protected function getData(): array
     {
         $days = collect(range(6, 0))->map(fn ($d) => now()->subDays($d)->format('D, M j'));
-        $counts = collect(range(6, 0))->map(fn ($d) => AttendanceRecord::whereDate('created_at', now()->subDays($d))
+        $counts = collect(range(6, 0))->map(fn ($d) => AttendanceRecord::whereDate('marked_at', now()->subDays($d))
             ->where('status', AttendanceStatus::Present)
             ->count()
         );
