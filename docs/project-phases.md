@@ -33,7 +33,7 @@ All 9 domain migrations created. Tables:
 **Note:** These migrations contain `enum` columns that must be amended in Phase 1.3.
 `timetables.day_of_week` is intentionally left as `enum` — its values are permanently fixed.
 
-### Phase 1.3 — Schema Amendment & Media Library ⬜
+### Phase 1.3 — Schema Amendment & Media Library ✅
 
 **Install `spatie/laravel-medialibrary`:**
 
@@ -72,7 +72,7 @@ Columns to amend:
 - `test_users_status_column_is_string_type()`
 - `test_timetables_day_of_week_remains_enum()`
 
-### Phase 1.4 — PHP Enum Classes ⬜
+### Phase 1.4 — PHP Enum Classes ✅
 
 Create one backed string enum per domain concept in `app/Enums/`.
 
@@ -98,7 +98,7 @@ Create one backed string enum per domain concept in `app/Enums/`.
 - `test_attendance_status_has_pending_review_case()`
 - `test_day_of_week_has_seven_cases()`
 
-### Phase 1.5 — Eloquent Models ⬜
+### Phase 1.5 — Eloquent Models ✅
 
 Create all models via `php artisan make:model`. Every model must define `$fillable` and a
 `casts()` method (not the `$casts` property). Relationships must have return type hints.
@@ -564,7 +564,7 @@ Reads `auth()->user()` when `$actor` is null. Reads `request()->ip()` and
 - `test_system_setting_set_creates_row_when_key_does_not_exist()`
 - `test_system_setting_set_updates_row_when_key_exists()`
 
-### Phase 1.6 — Model Factories ⬜
+### Phase 1.6 — Model Factories ✅
 
 Create a factory for every model in `database/factories/` via `php artisan make:factory`.
 Follow the existing `UserFactory` as the pattern. Use `fake()` (not `$this->faker`).
@@ -642,7 +642,7 @@ Follow the existing `UserFactory` as the pattern. Use `fake()` (not `$this->fake
 - `test_attendance_session_factory_active_state_sets_started_at()`
 - `test_proxy_flag_factory_critical_state_sets_correct_severity()`
 
-### Phase 1.7 — Seeders 🔧
+### Phase 1.7 — Seeders ✅
 
 **`DefaultSettingsSeeder`** ✅ — seeds `SecurityPolicy`, `SystemSetting`, and
 `DataRetentionPolicy` using `updateOrInsert`.
@@ -666,7 +666,7 @@ behind an `App::isLocal()` guard.
 
 **Tests:** none — demo seeders are verified by running and checking row counts in a local DB.
 
-### Phase 1.8 — EnsureRole Middleware ⬜
+### Phase 1.8 — EnsureRole Middleware ✅
 
 Create `app/Http/Middleware/EnsureRole.php`. Reads `auth()->user()->role` (returns a
 `UserRole` enum), compares its value against the parameter passed via
@@ -680,7 +680,7 @@ unauthenticated.
 - `test_unauthenticated_user_receives_401()`
 - `test_suspended_user_is_blocked()`
 
-### Phase 1.9 — Filament Panel Providers ⬜
+### Phase 1.9 — Filament Panel Providers ✅
 
 Configure all three panel providers. The `SuperAdminPanelProvider` stub needs full
 replacement.
@@ -717,7 +717,7 @@ replacement.
 
 ## Phase 2: Core Services
 
-### Phase 2.1 — QRChallengeService ⬜
+### Phase 2.1 — QRChallengeService ✅
 
 `app/Services/QRChallengeService.php`
 
@@ -742,7 +742,7 @@ On scan, validates the HMAC signature and expiry before accepting.
 - `test_validate_scan_returns_false_for_wrong_session()`
 - `test_validate_scan_allows_clock_skew_within_policy_tolerance()`
 
-### Phase 2.2 — AuditLog Model & LogsToAudit Trait ⬜
+### Phase 2.2 — AuditLog Model & LogsToAudit Trait ✅
 
 `app/Models/AuditLog.php` (static `record()` helper — see Phase 1.4)
 `app/Concerns/LogsToAudit.php` — trait mixed into Filament Resource classes
@@ -759,7 +759,7 @@ On scan, validates the HMAC signature and expiry before accepting.
 - `test_audit_log_stores_old_and_new_values_as_json()`
 - `test_audit_log_works_with_null_actor_for_system_actions()`
 
-### Phase 2.3 — SecurityPolicy & SystemSetting Caching ⬜
+### Phase 2.3 — SecurityPolicy & SystemSetting Caching ✅
 
 Wrap reads in `Cache::remember()` so polling widgets don't hit the database.
 
@@ -774,7 +774,7 @@ Wrap reads in `Cache::remember()` so polling widgets don't hit the database.
 - `test_system_setting_get_is_cached_after_first_read()`
 - `test_system_setting_cache_is_cleared_on_set()`
 
-### Phase 2.4 — AttendanceMarked Broadcast Event ⬜
+### Phase 2.4 — AttendanceMarked Broadcast Event ✅
 
 `app/Events/AttendanceMarked.php`
 
@@ -1413,8 +1413,8 @@ Rate limiting: `throttle:10,1` per student.
 
 | Phase | Tasks | Status |
 |---|---|---|
-| 1 — DB Structure | 1.1–1.9 | ✅✅⬜⬜⬜⬜🔧⬜⬜ |
-| 2 — Core Services | 2.1–2.4 | ⬜⬜⬜⬜ |
+| 1 — DB Structure | 1.1–1.9 | ✅✅✅✅✅✅✅✅✅ |
+| 2 — Core Services | 2.1–2.4 | ✅✅✅✅ |
 | 3 — Super Admin Panel | 3.1–3.8 | ⬜⬜⬜⬜⬜⬜⬜⬜ |
 | 4 — Admin Panel | 4.1–4.11 | ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ |
 | 5 — Faculty Panel | 5.1–5.7 | ⬜⬜⬜⬜⬜⬜⬜ |
