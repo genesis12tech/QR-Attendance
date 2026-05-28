@@ -12,7 +12,7 @@ class QRChallengeService
 {
     public function generateForSession(AttendanceSession $session): string
     {
-        $policy = SecurityPolicy::active()->first();
+        $policy = SecurityPolicy::getActive();
         $nonce = Str::uuid()->toString();
         $issuedAt = now()->timestamp;
 
@@ -49,7 +49,7 @@ class QRChallengeService
             return false;
         }
 
-        $policy = SecurityPolicy::active()->first();
+        $policy = SecurityPolicy::getActive();
         $window = $policy->qr_expiry_seconds + $policy->clock_skew_seconds;
 
         return now()->timestamp - $data['issued_at'] <= $window;
