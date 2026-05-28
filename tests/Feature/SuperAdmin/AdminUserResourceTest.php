@@ -4,6 +4,7 @@ use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Filament\SuperAdmin\Resources\AdminUsers\Pages\CreateAdminUser;
 use App\Filament\SuperAdmin\Resources\AdminUsers\Pages\ListAdminUsers;
+use App\Models\AdminRoleAssignment;
 use App\Models\AuditLog;
 use App\Models\User;
 use Filament\Actions\Testing\TestAction;
@@ -107,4 +108,21 @@ test('password_confirmation_is_required', function () {
         ])
         ->call('create')
         ->assertHasFormErrors(['password']);
+});
+
+test('super_admin_can_revoke_role_assignment', function () {
+    $superAdmin = User::factory()->superAdmin()->create();
+    $adminUser = User::factory()->admin()->create();
+    $assignment = AdminRoleAssignment::factory()->create([
+        'user_id' => $adminUser->id,
+        'revoked_at' => null,
+    ]);
+
+    $this->actingAs($superAdmin);
+
+    livewire(ListAdminUsers::class)
+        ->callAction(TestAction::make('revokeRole')->table($adminUser))
+        ->assertSuccessful();
+
+    expect($assignment->fresh()->revoked_at)->not->toBeNull();
 });

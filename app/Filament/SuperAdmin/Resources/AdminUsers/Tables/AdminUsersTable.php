@@ -54,7 +54,7 @@ class AdminUsersTable
                         AdminRoleAssignment::where('user_id', $record->id)
                             ->active()
                             ->update(['revoked_at' => now()]);
-                        AuditLog::record('user.role_revoked', $record, ['role' => $record->role->value], []);
+                        AuditLog::record('user.role_assignment_revoked', $record, ['role' => $record->role->value], []);
                         Notification::make()->title('Role revoked')->success()->send();
                     }),
             ])
@@ -64,29 +64,36 @@ class AdminUsersTable
                         ->label('Suspend selected')
                         ->requiresConfirmation()
                         ->action(function (Collection $records) {
-                            $records->each(function (User $user) {
-                                $old = ['status' => $user->status->value];
-                                $user->update(['status' => UserStatus::Suspended]);
-                                AuditLog::record('user.suspended', $user, $old, ['status' => UserStatus::Suspended->value]);
-                            });
+                            $records
+                                ->filter(fn (User $user) => $user->status !== UserStatus::Suspended)
+                                ->each(function (User $user) {
+                                    $old = ['status' => $user->status->value];
+                                    $user->update(['status' => UserStatus::Suspended]);
+                                    AuditLog::record('user.suspended', $user, $old, ['status' => UserStatus::Suspended->value]);
+                                });
                             Notification::make()->title('Users suspended')->success()->send();
                         }),
                     BulkAction::make('export_csv')
                         ->label('Export CSV')
                         ->icon(Heroicon::OutlinedArrowDownTray)
                         ->action(function (Collection $records) {
-                            $csv = "Name,Email,Role,Status\n";
+                            $handle = fopen('php://temp', 'r+');
+                            fputcsv($handle, ['Name', 'Email', 'Role', 'Status']);
                             foreach ($records as $record) {
-                                $csv .= sprintf(
-                                    "%s,%s,%s,%s\n",
+                                fputcsv($handle, [
                                     $record->name,
                                     $record->email,
                                     $record->role->value,
                                     $record->status->value,
-                                );
+                                ]);
                             }
+                            rewind($handle);
+                            $csv = stream_get_contents($handle);
+                            fclose($handle);
 
-                            return response()->streamDownload(fn () => print ($csv), 'admin-users.csv');
+                            return response()->streamDownload(function () use ($csv) {
+                                echo $csv;
+                            }, 'admin-users.csv');
                         }),
                 ]),
             ]);
