@@ -38,7 +38,7 @@ return new class extends Migration
             $table->collation = 'utf8mb4_unicode_ci';
 
             $table->id();
-            $table->foreignId('actor_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('actor_id')->nullable();
             $table->string('actor_role')->nullable();
             $table->string('action');
             $table->string('entity_type')->nullable();

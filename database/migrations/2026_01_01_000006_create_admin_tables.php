@@ -94,7 +94,7 @@ return new class extends Migration
             $table->enum('status', ['active', 'dropped', 'completed'])->default('active');
             $table->timestamps();
 
-            $table->unique(['student_id', 'course_id']);
+            $table->unique(['student_id', 'course_id', 'class_group_id'], 'uq_enrollments_student_course_group');
             $table->index('course_id');
             $table->index('class_group_id');
             $table->index('status');

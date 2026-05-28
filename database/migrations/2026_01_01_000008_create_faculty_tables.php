@@ -37,13 +37,33 @@ return new class extends Migration
             $table->index(['faculty_id', 'status']);
         });
 
-        Schema::create('attendance_records', function (Blueprint $table) {
+        Schema::create('qr_challenges', function (Blueprint $table) {
             $table->engine = 'InnoDB';
             $table->charset = 'utf8mb4';
             $table->collation = 'utf8mb4_unicode_ci';
 
             $table->id();
             $table->foreignId('session_id')->constrained('attendance_sessions')->cascadeOnDelete();
+            $table->char('jti_hash', 64);
+            $table->unsignedBigInteger('slot_no');
+            $table->timestamp('not_before');
+            $table->timestamp('expires_at');
+            $table->foreignId('room_id')->constrained()->restrictOnDelete();
+            $table->boolean('was_used')->default(false);
+            $table->timestamp('created_at')->useCurrent();
+
+            $table->unique('jti_hash', 'uq_qr_jti_hash');
+            $table->index(['session_id', 'slot_no'], 'idx_qr_session_slot');
+            $table->index('expires_at', 'idx_qr_expires');
+        });
+
+        Schema::create('attendance_records', function (Blueprint $table) {
+            $table->engine = 'InnoDB';
+            $table->charset = 'utf8mb4';
+            $table->collation = 'utf8mb4_unicode_ci';
+
+            $table->id();
+            $table->foreignId('attendance_session_id')->constrained('attendance_sessions')->cascadeOnDelete();
             $table->foreignId('student_id')->constrained()->restrictOnDelete();
             $table->foreignId('enrollment_id')->nullable()->constrained()->nullOnDelete();
             $table->enum('status', ['present', 'late', 'absent', 'pending_review', 'rejected'])->default('pending_review');
@@ -58,8 +78,8 @@ return new class extends Migration
             $table->timestamp('overridden_at')->nullable();
             $table->timestamps();
 
-            $table->unique(['session_id', 'student_id']);
-            $table->index('session_id');
+            $table->unique(['attendance_session_id', 'student_id'], 'uq_attendance_session_student');
+            $table->index('attendance_session_id');
             $table->index('student_id');
             $table->index('status');
             $table->index('risk_score');
@@ -88,6 +108,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('session_exports');
         Schema::dropIfExists('attendance_records');
+        Schema::dropIfExists('qr_challenges');
         Schema::dropIfExists('attendance_sessions');
     }
 };
