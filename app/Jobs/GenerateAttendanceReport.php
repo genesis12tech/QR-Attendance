@@ -26,6 +26,8 @@ class GenerateAttendanceReport implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    protected ?int $exportId = null;
+
     public int $tries = 3;
 
     /** @var array<int, int> */
@@ -49,6 +51,8 @@ class GenerateAttendanceReport implements ShouldQueue
             'format' => $this->format,
             'status' => ExportStatus::Processing,
         ]);
+
+        $this->exportId = $export->id;
 
         $query = $this->buildQuery();
         $filename = 'reports/'.Str::uuid().'.'.$this->extension();
@@ -93,10 +97,12 @@ class GenerateAttendanceReport implements ShouldQueue
 
     public function failed(\Throwable $exception): void
     {
-        $export = SessionExport::where('requested_by', $this->requestedBy)
-            ->where('status', ExportStatus::Processing)
-            ->latest()
-            ->first();
+        $export = $this->exportId
+            ? SessionExport::find($this->exportId)
+            : SessionExport::where('requested_by', $this->requestedBy)
+                ->where('status', ExportStatus::Processing)
+                ->latest()
+                ->first();
 
         if ($export) {
             $export->update(['status' => ExportStatus::Failed]);
