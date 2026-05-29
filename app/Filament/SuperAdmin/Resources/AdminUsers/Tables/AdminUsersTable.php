@@ -45,6 +45,18 @@ class AdminUsersTable
                         AuditLog::record('user.suspended', $record, $old, ['status' => UserStatus::Suspended->value]);
                         Notification::make()->title('User suspended')->success()->send();
                     }),
+                Action::make('reinstate')
+                    ->label('Reinstate')
+                    ->icon(Heroicon::OutlinedCheckCircle)
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn (User $record) => $record->status === UserStatus::Suspended)
+                    ->action(function (User $record) {
+                        $old = ['status' => $record->status->value];
+                        $record->update(['status' => UserStatus::Active]);
+                        AuditLog::record('user.reinstated', $record, $old, ['status' => UserStatus::Active->value]);
+                        Notification::make()->title('User reinstated')->success()->send();
+                    }),
                 Action::make('revokeRole')
                     ->label('Revoke Role')
                     ->icon(Heroicon::OutlinedXCircle)

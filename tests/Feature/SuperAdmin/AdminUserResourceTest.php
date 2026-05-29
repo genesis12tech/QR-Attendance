@@ -126,3 +126,32 @@ test('super_admin_can_revoke_role_assignment', function () {
 
     expect($assignment->fresh()->revoked_at)->not->toBeNull();
 });
+
+test('super_admin_can_reinstate_suspended_user', function () {
+    $superAdmin = User::factory()->superAdmin()->create();
+    $adminUser = User::factory()->admin()->create(['status' => UserStatus::Suspended]);
+
+    $this->actingAs($superAdmin);
+
+    livewire(ListAdminUsers::class)
+        ->callAction(TestAction::make('reinstate')->table($adminUser))
+        ->assertSuccessful();
+
+    expect($adminUser->fresh()->status)->toBe(UserStatus::Active);
+});
+
+test('reinstate_action_writes_audit_log', function () {
+    $superAdmin = User::factory()->superAdmin()->create();
+    $adminUser = User::factory()->admin()->create(['status' => UserStatus::Suspended]);
+
+    $this->actingAs($superAdmin);
+
+    livewire(ListAdminUsers::class)
+        ->callAction(TestAction::make('reinstate')->table($adminUser));
+
+    expect(
+        AuditLog::where('action', 'user.reinstated')
+            ->where('entity_id', $adminUser->id)
+            ->exists()
+    )->toBeTrue();
+});
