@@ -21,7 +21,7 @@ beforeEach(function () {
 function proxyFlagForFaculty(Faculty $faculty): ProxyFlag
 {
     $session = AttendanceSession::factory()->active()->create(['faculty_id' => $faculty->id]);
-    $record = AttendanceRecord::factory()->pendingReview()->create(['attendance_session_id' => $session->id]);
+    $record = AttendanceRecord::factory()->pendingReview()->create(['session_id' => $session->id]);
 
     return ProxyFlag::factory()->pending()->create(['attendance_record_id' => $record->id]);
 }

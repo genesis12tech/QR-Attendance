@@ -15,7 +15,7 @@ class AttendanceRecord extends Model implements HasMedia
     use HasFactory, InteractsWithMedia;
 
     protected $fillable = [
-        'attendance_session_id',
+        'session_id',
         'student_id',
         'enrollment_id',
         'status',
@@ -49,7 +49,7 @@ class AttendanceRecord extends Model implements HasMedia
 
     public function session(): BelongsTo
     {
-        return $this->belongsTo(AttendanceSession::class, 'attendance_session_id');
+        return $this->belongsTo(AttendanceSession::class, 'session_id');
     }
 
     public function student(): BelongsTo

@@ -61,7 +61,7 @@ class DefaulterListPage extends Page implements HasTable
                         DB::raw('(
                             SELECT COUNT(*)
                             FROM attendance_records
-                            INNER JOIN attendance_sessions ON attendance_records.attendance_session_id = attendance_sessions.id
+                            INNER JOIN attendance_sessions ON attendance_records.session_id = attendance_sessions.id
                             WHERE attendance_records.student_id = enrollments.student_id
                             AND attendance_sessions.course_id = enrollments.course_id
                             AND attendance_sessions.status = "closed"

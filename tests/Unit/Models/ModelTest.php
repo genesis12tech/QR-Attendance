@@ -184,7 +184,7 @@ test('proxy flag pending scope returns only pending rows', function () {
     $session = AttendanceSession::create(['faculty_id' => $faculty->id, 'course_id' => $course->id, 'class_group_id' => $group->id, 'status' => 'pending']);
     $sUser = User::factory()->create();
     $student = Student::create(['user_id' => $sUser->id, 'department_id' => $dept->id, 'roll_no' => '2024001', 'batch_year' => '2024', 'status' => 'active']);
-    $record = AttendanceRecord::create(['attendance_session_id' => $session->id, 'student_id' => $student->id, 'status' => 'pending_review', 'risk_score' => 0]);
+    $record = AttendanceRecord::create(['session_id' => $session->id, 'student_id' => $student->id, 'status' => 'pending_review', 'risk_score' => 0]);
 
     ProxyFlag::insert([
         ['attendance_record_id' => $record->id, 'severity' => 'medium', 'reason_code' => 'gps', 'risk_score' => 60, 'review_status' => 'pending',  'created_at' => now(), 'updated_at' => now()],

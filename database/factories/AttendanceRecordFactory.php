@@ -16,7 +16,7 @@ class AttendanceRecordFactory extends Factory
     public function definition(): array
     {
         return [
-            'attendance_session_id' => AttendanceSession::factory()->active(),
+            'session_id' => AttendanceSession::factory()->active(),
             'student_id' => Student::factory(),
             'enrollment_id' => null,
             'status' => AttendanceStatus::Present,

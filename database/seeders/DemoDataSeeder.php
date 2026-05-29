@@ -248,7 +248,7 @@ class DemoDataSeeder extends Seeder
 
         // 10 present attendance records (enrollments 0–9)
         $enrollments->take(10)->each(fn (Enrollment $enrollment) => AttendanceRecord::create([
-            'attendance_session_id' => $closedSession->id,
+            'session_id' => $closedSession->id,
             'student_id' => $enrollment->student_id,
             'enrollment_id' => $enrollment->id,
             'status' => AttendanceStatus::Present,
@@ -258,7 +258,7 @@ class DemoDataSeeder extends Seeder
 
         // 3 late attendance records (enrollments 10–12)
         $enrollments->slice(10, 3)->each(fn (Enrollment $enrollment) => AttendanceRecord::create([
-            'attendance_session_id' => $closedSession->id,
+            'session_id' => $closedSession->id,
             'student_id' => $enrollment->student_id,
             'enrollment_id' => $enrollment->id,
             'status' => AttendanceStatus::Late,
@@ -270,7 +270,7 @@ class DemoDataSeeder extends Seeder
         $pendingRecords = [];
         $enrollments->slice(13, 2)->each(function (Enrollment $enrollment) use ($closedSession, $sessionStarted, &$pendingRecords) {
             $pendingRecords[] = AttendanceRecord::create([
-                'attendance_session_id' => $closedSession->id,
+                'session_id' => $closedSession->id,
                 'student_id' => $enrollment->student_id,
                 'enrollment_id' => $enrollment->id,
                 'status' => AttendanceStatus::PendingReview,

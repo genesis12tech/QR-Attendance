@@ -65,7 +65,7 @@ function createStudentWithAttendance(
 
     foreach ($sessions->take($attendedCount) as $session) {
         AttendanceRecord::factory()->present()->create([
-            'attendance_session_id' => $session->id,
+            'session_id' => $session->id,
             'student_id' => $student->id,
             'enrollment_id' => $enrollment->id,
         ]);
@@ -107,7 +107,7 @@ test('defaulter_list_only_shows_students_below_minimum_attendance', function () 
     $enrollmentA = Enrollment::factory()->create(['student_id' => $studentA->id, 'course_id' => $course->id]);
     foreach ($sessions->take(3) as $session) {
         AttendanceRecord::factory()->present()->create([
-            'attendance_session_id' => $session->id,
+            'session_id' => $session->id,
             'student_id' => $studentA->id,
             'enrollment_id' => $enrollmentA->id,
         ]);
@@ -118,7 +118,7 @@ test('defaulter_list_only_shows_students_below_minimum_attendance', function () 
     $enrollmentB = Enrollment::factory()->create(['student_id' => $studentB->id, 'course_id' => $course->id]);
     foreach ($sessions->take(2) as $session) {
         AttendanceRecord::factory()->present()->create([
-            'attendance_session_id' => $session->id,
+            'session_id' => $session->id,
             'student_id' => $studentB->id,
             'enrollment_id' => $enrollmentB->id,
         ]);
