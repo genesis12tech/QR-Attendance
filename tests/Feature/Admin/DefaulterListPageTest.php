@@ -1,8 +1,5 @@
 <?php
 
-use App\Enums\AttendanceStatus;
-use App\Enums\EnrollmentStatus;
-use App\Enums\SessionStatus;
 use App\Filament\Admin\Pages\DefaulterListPage;
 use App\Jobs\SendAbsenceNotifications;
 use App\Models\AdminRoleAssignment;
@@ -53,22 +50,19 @@ function createStudentWithAttendance(
     $enrollment = Enrollment::factory()->create([
         'student_id' => $student->id,
         'course_id' => $course->id,
-        'status' => EnrollmentStatus::Active->value,
     ]);
 
     $faculty = Faculty::factory()->create();
-    $sessions = AttendanceSession::factory()->count($sessionCount)->create([
+    $sessions = AttendanceSession::factory()->count($sessionCount)->closed()->create([
         'course_id' => $course->id,
         'faculty_id' => $faculty->id,
-        'status' => SessionStatus::Closed->value,
     ]);
 
     foreach ($sessions->take($attendedCount) as $session) {
-        AttendanceRecord::factory()->create([
+        AttendanceRecord::factory()->present()->create([
             'attendance_session_id' => $session->id,
             'student_id' => $student->id,
             'enrollment_id' => $enrollment->id,
-            'status' => AttendanceStatus::Present->value,
         ]);
     }
 
@@ -134,4 +128,6 @@ test('notify_action_dispatches_absence_notifications_job', function () {
         return in_array($student->id, $job->studentIds, true)
             && $job->courseId === $course->id;
     });
+
+    Queue::assertPushedTimes(SendAbsenceNotifications::class, 1);
 });
