@@ -33,6 +33,7 @@ class DefaultersExport implements FromCollection, WithHeadings
                     INNER JOIN attendance_sessions ON attendance_records.attendance_session_id = attendance_sessions.id
                     WHERE attendance_records.student_id = enrollments.student_id
                     AND attendance_sessions.course_id = enrollments.course_id
+                    AND attendance_sessions.status = "closed"
                     AND attendance_records.status IN ("present", "late")
                 ) AS attended_sessions'),
             ])

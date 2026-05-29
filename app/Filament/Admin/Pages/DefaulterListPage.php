@@ -114,6 +114,16 @@ class DefaulterListPage extends Page implements HasTable
                 ->action(function (): void {
                     $defaulterData = $this->getDefaulterData();
 
+                    if (empty($defaulterData)) {
+                        Notification::make()
+                            ->title('No defaulters')
+                            ->body('There are no defaulting students to notify.')
+                            ->warning()
+                            ->send();
+
+                        return;
+                    }
+
                     collect($defaulterData)
                         ->groupBy('course_id')
                         ->each(function (Collection $group, int|string $courseId): void {
@@ -172,7 +182,10 @@ class DefaulterListPage extends Page implements HasTable
                     }
 
                     $attended = AttendanceRecord::where('student_id', $enrollment->student_id)
-                        ->whereHas('session', fn (Builder $q) => $q->where('course_id', $enrollment->course_id))
+                        ->whereHas('session', fn (Builder $q) => $q
+                            ->where('course_id', $enrollment->course_id)
+                            ->where('status', SessionStatus::Closed->value)
+                        )
                         ->whereIn('status', [AttendanceStatus::Present->value, AttendanceStatus::Late->value])
                         ->count();
 
