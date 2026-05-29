@@ -4,8 +4,9 @@ use App\Enums\ExportStatus;
 use App\Jobs\GenerateAttendanceReport;
 use App\Models\SessionExport;
 use App\Models\User;
-use Filament\Notifications\Notification;
+use Filament\Notifications\DatabaseNotification as FilamentDatabaseNotification;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -100,7 +101,7 @@ it('sends a success notification to the requesting user on completion', function
 
     $user = User::find($job->requestedBy);
 
-    Notification::assertSentTo($user, function ($notification) {
-        return $notification->getTitle() === 'Report ready';
+    Notification::assertSentTo($user, FilamentDatabaseNotification::class, function (FilamentDatabaseNotification $notification) {
+        return ($notification->data['title'] ?? null) === 'Report ready';
     });
 });
