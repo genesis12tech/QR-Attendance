@@ -21,6 +21,8 @@ class EditSecurityPolicy extends EditRecord
             'qr_expiry_seconds', 'risk_auto_reject', 'risk_pending_review',
             'late_threshold_mins', 'geofence_radius_m', 'device_binding_required',
             'clock_skew_seconds', 'is_active',
+            'w_gps', 'w_device', 'w_clock_skew', 'w_wifi', 'w_beacon',
+            'w_ip_cluster', 'w_speed', 'w_peer_scan', 'w_biometric',
         ]);
     }
 
@@ -36,6 +38,8 @@ class EditSecurityPolicy extends EditRecord
                 'qr_expiry_seconds', 'risk_auto_reject', 'risk_pending_review',
                 'late_threshold_mins', 'geofence_radius_m', 'device_binding_required',
                 'clock_skew_seconds', 'is_active',
+                'w_gps', 'w_device', 'w_clock_skew', 'w_wifi', 'w_beacon',
+                'w_ip_cluster', 'w_speed', 'w_peer_scan', 'w_biometric',
             ])
         );
     }

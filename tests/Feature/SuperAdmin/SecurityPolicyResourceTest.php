@@ -97,3 +97,43 @@ test('save_writes_audit_log', function () {
             ->exists()
     )->toBeTrue();
 });
+
+test('proxy_signal_weights_can_be_saved', function () {
+    $superAdmin = User::factory()->superAdmin()->create();
+    $policy = SecurityPolicy::factory()->create();
+
+    $this->actingAs($superAdmin);
+
+    livewire(EditSecurityPolicy::class, ['record' => $policy->id])
+        ->fillForm([
+            'w_gps' => 30,
+            'w_device' => 25,
+            'w_clock_skew' => 15,
+            'w_wifi' => 10,
+            'w_beacon' => 10,
+            'w_ip_cluster' => 5,
+            'w_speed' => 5,
+            'w_peer_scan' => 0,
+            'w_biometric' => 0,
+        ])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    \Pest\Laravel\assertDatabaseHas(SecurityPolicy::class, [
+        'id' => $policy->id,
+        'w_gps' => 30,
+        'w_biometric' => 0,
+    ]);
+});
+
+test('proxy_signal_weight_rejects_value_above_100', function () {
+    $superAdmin = User::factory()->superAdmin()->create();
+    $policy = SecurityPolicy::factory()->create();
+
+    $this->actingAs($superAdmin);
+
+    livewire(EditSecurityPolicy::class, ['record' => $policy->id])
+        ->fillForm(['w_gps' => 101])
+        ->call('save')
+        ->assertHasFormErrors(['w_gps']);
+});
