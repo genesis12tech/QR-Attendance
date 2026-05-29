@@ -966,7 +966,7 @@ Pagination default: 25.
 - `test_roll_no_must_be_unique()`
 - `test_bulk_enroll_creates_enrollment_records()`
 
-### Phase 4.2 — FacultyResource ⬜
+### Phase 4.2 — FacultyResource ✅
 
 `app/Filament/Admin/Resources/FacultyResource.php`
 
@@ -982,7 +982,7 @@ Actions: `EditAction`, `ViewSessionsAction`, `ViewTimetableAction`.
 - `test_admin_can_create_faculty()`
 - `test_employee_code_must_be_unique()`
 
-### Phase 4.3 — CourseResource & ClassGroupResource ⬜
+### Phase 4.3 — CourseResource & ClassGroupResource ✅
 
 `app/Filament/Admin/Resources/CourseResource.php`
 `app/Filament/Admin/Resources/ClassGroupResource.php`
@@ -1002,7 +1002,7 @@ ClassGroupResource form: `TextInput(name)`, `Select(course_id)`.
 - `test_min_attendance_pct_must_be_between_0_and_100()`
 - `test_soft_deleted_course_is_not_visible()`
 
-### Phase 4.4 — RoomResource ⬜
+### Phase 4.4 — RoomResource ✅
 
 `app/Filament/Admin/Resources/RoomResource.php`
 
@@ -1019,7 +1019,7 @@ Form: `TextInput(name)`, `TextInput(building)`, `TextInput(capacity)`,
 - `test_admin_can_toggle_room_active_status()`
 - `test_latitude_and_longitude_are_optional()`
 
-### Phase 4.5 — TimetableResource ⬜
+### Phase 4.5 — TimetableResource ✅
 
 `app/Filament/Admin/Resources/TimetableResource.php`
 
@@ -1035,7 +1035,7 @@ Form: `Select(course_id)`, `Select(class_group_id)`, `Select(faculty_id)`,
 - `test_start_time_must_be_before_end_time()`
 - `test_effective_from_is_required()`
 
-### Phase 4.6 — EnrollmentResource ⬜
+### Phase 4.6 — EnrollmentResource ✅
 
 `app/Filament/Admin/Resources/EnrollmentResource.php`
 
@@ -1052,7 +1052,7 @@ BulkActions: `DropBulkAction` (sets `status=dropped`), `MarkCompletedBulkAction`
 - `test_bulk_drop_sets_status_to_dropped()`
 - `test_bulk_mark_completed_sets_status_to_completed()`
 
-### Phase 4.7 — ProxyFlagResource (Admin) ⬜
+### Phase 4.7 — ProxyFlagResource (Admin) ✅
 
 `app/Filament/Admin/Resources/ProxyFlagResource.php`
 
@@ -1417,7 +1417,7 @@ Rate limiting: `throttle:10,1` per student.
 | 1 — DB Structure | 1.1–1.9 | ✅✅✅✅✅✅✅✅✅ |
 | 2 — Core Services | 2.1–2.4 | ✅✅✅✅ |
 | 3 — Super Admin Panel | 3.1–3.8 | ✅✅✅✅✅✅✅✅ |
-| 4 — Admin Panel | 4.1–4.11 | ✅⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜ |
+| 4 — Admin Panel | 4.1–4.11 | ✅✅✅✅✅✅✅⬜⬜⬜⬜ |
 | 5 — Faculty Panel | 5.1–5.7 | ⬜⬜⬜⬜⬜⬜⬜ |
 | 6 — Background Jobs | 6.1–6.3 | ⬜⬜⬜ |
 | 7 — Student REST API | 7.1–7.3 | ⬜⬜⬜ |
