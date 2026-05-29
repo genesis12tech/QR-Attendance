@@ -1078,7 +1078,7 @@ Navigation badge: pending count.
 - `test_bulk_reject_requires_reason()`
 - `test_navigation_badge_shows_pending_count()`
 
-### Phase 4.8 — AttendanceRecordResource (Admin) ⬜
+### Phase 4.8 — AttendanceRecordResource (Admin) ✅
 
 `app/Filament/Admin/Resources/AttendanceRecordResource.php`
 
@@ -1099,7 +1099,7 @@ Filters: `SelectFilter(status)`, `SelectFilter(course)`, `DateRangeFilter(marked
 - `test_override_sets_override_by_to_current_user()`
 - `test_high_risk_filter_returns_records_with_risk_score_gte_50()`
 
-### Phase 4.9 — AttendanceSessionResource (Admin, Read-Only) ⬜
+### Phase 4.9 — AttendanceSessionResource (Admin, Read-Only) ✅
 
 `app/Filament/Admin/Resources/AttendanceSessionResource.php`
 
@@ -1113,7 +1113,7 @@ No create or edit actions — read/review only.
 - `test_admin_cannot_see_sessions_from_other_departments()`
 - `test_admin_cannot_create_sessions()`
 
-### Phase 4.10 — ReportPage & DefaulterListPage ⬜
+### Phase 4.10 — ReportPage & DefaulterListPage ✅
 
 `app/Filament/Admin/Pages/ReportPage.php`
 `app/Filament/Admin/Pages/DefaulterListPage.php`
@@ -1137,7 +1137,7 @@ Result cached 5 minutes.
 - `test_defaulter_list_only_shows_students_below_minimum_attendance()`
 - `test_notify_action_dispatches_absence_notifications_job()`
 
-### Phase 4.11 — Admin Dashboard Widgets ⬜
+### Phase 4.11 — Admin Dashboard Widgets ✅
 
 `app/Filament/Admin/Widgets/`
 
@@ -1163,7 +1163,7 @@ Polling 10s.
 
 ## Phase 5: Faculty Panel
 
-### Phase 5.1 — AttendanceSessionResource (Faculty) ⬜
+### Phase 5.1 — AttendanceSessionResource (Faculty) ✅
 
 `app/Filament/Faculty/Resources/AttendanceSessionResource.php`
 
@@ -1184,7 +1184,7 @@ Actions: `StartAction` (pending only → `status=active` + `AuditLog::record()` 
 - `test_close_action_dispatches_finalize_job()`
 - `test_reopen_action_is_only_available_within_grace_window()`
 
-### Phase 5.2 — QrDisplayPage ⬜
+### Phase 5.2 — QrDisplayPage ✅
 
 `app/Filament/Faculty/Pages/QrDisplayPage.php`
 
@@ -1208,7 +1208,7 @@ Full-width Livewire page for classroom projection.
 - `test_pause_session_action_sets_status_to_paused()`
 - `test_force_refresh_generates_new_qr_immediately()`
 
-### Phase 5.3 — TimetablePage ⬜
+### Phase 5.3 — TimetablePage ✅
 
 `app/Filament/Faculty/Pages/TimetablePage.php`
 
@@ -1223,7 +1223,7 @@ Guard: no start if active session already exists for this slot today.
 - `test_start_session_from_timetable_creates_session()`
 - `test_start_session_fails_if_active_session_already_exists_for_slot()`
 
-### Phase 5.4 — ProxyFlagResource (Faculty) ⬜
+### Phase 5.4 — ProxyFlagResource (Faculty) ✅
 
 `app/Filament/Faculty/Resources/ProxyFlagResource.php`
 
@@ -1417,8 +1417,8 @@ Rate limiting: `throttle:10,1` per student.
 | 1 — DB Structure | 1.1–1.9 | ✅✅✅✅✅✅✅✅✅ |
 | 2 — Core Services | 2.1–2.4 | ✅✅✅✅ |
 | 3 — Super Admin Panel | 3.1–3.8 | ✅✅✅✅✅✅✅✅ |
-| 4 — Admin Panel | 4.1–4.11 | ✅✅✅✅✅✅✅⬜⬜⬜⬜ |
-| 5 — Faculty Panel | 5.1–5.7 | ⬜⬜⬜⬜⬜⬜⬜ |
+| 4 — Admin Panel | 4.1–4.11 | ✅✅✅✅✅✅✅✅✅✅✅ |
+| 5 — Faculty Panel | 5.1–5.7 | ✅✅✅✅⬜⬜⬜ |
 | 6 — Background Jobs | 6.1–6.3 | ⬜⬜⬜ |
 | 7 — Student REST API | 7.1–7.3 | ⬜⬜⬜ |
 
