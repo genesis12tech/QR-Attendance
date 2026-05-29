@@ -1,0 +1,137 @@
+<?php
+
+use App\Enums\AttendanceStatus;
+use App\Enums\EnrollmentStatus;
+use App\Enums\SessionStatus;
+use App\Filament\Admin\Pages\DefaulterListPage;
+use App\Jobs\SendAbsenceNotifications;
+use App\Models\AdminRoleAssignment;
+use App\Models\AttendanceRecord;
+use App\Models\AttendanceSession;
+use App\Models\Course;
+use App\Models\Department;
+use App\Models\Enrollment;
+use App\Models\Faculty;
+use App\Models\Student;
+use App\Models\User;
+use Filament\Facades\Filament;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Queue;
+use Tests\TestCase;
+
+use function Pest\Livewire\livewire;
+
+uses(TestCase::class, LazilyRefreshDatabase::class);
+
+beforeEach(function () {
+    Filament::setCurrentPanel(Filament::getPanel('admin'));
+});
+
+function adminForDefaulters(Department $department): User
+{
+    $admin = User::factory()->admin()->create();
+    AdminRoleAssignment::factory()->create([
+        'user_id' => $admin->id,
+        'department_id' => $department->id,
+        'revoked_at' => null,
+    ]);
+
+    return $admin;
+}
+
+/**
+ * Creates $sessionCount closed sessions for the given course, then creates
+ * $attendedCount present records for the given student+enrollment.
+ * Returns the created enrollment.
+ */
+function createStudentWithAttendance(
+    Student $student,
+    Course $course,
+    int $sessionCount,
+    int $attendedCount
+): Enrollment {
+    $enrollment = Enrollment::factory()->create([
+        'student_id' => $student->id,
+        'course_id' => $course->id,
+        'status' => EnrollmentStatus::Active->value,
+    ]);
+
+    $faculty = Faculty::factory()->create();
+    $sessions = AttendanceSession::factory()->count($sessionCount)->create([
+        'course_id' => $course->id,
+        'faculty_id' => $faculty->id,
+        'status' => SessionStatus::Closed->value,
+    ]);
+
+    foreach ($sessions->take($attendedCount) as $session) {
+        AttendanceRecord::factory()->create([
+            'attendance_session_id' => $session->id,
+            'student_id' => $student->id,
+            'enrollment_id' => $enrollment->id,
+            'status' => AttendanceStatus::Present->value,
+        ]);
+    }
+
+    return $enrollment;
+}
+
+test('admin_can_view_defaulter_list', function () {
+    $dept = Department::factory()->create();
+    $admin = adminForDefaulters($dept);
+
+    $this->actingAs($admin)
+        ->get('/admin/defaulters')
+        ->assertSuccessful();
+});
+
+test('defaulter_list_only_shows_students_below_minimum_attendance', function () {
+    $dept = Department::factory()->create();
+    $admin = adminForDefaulters($dept);
+
+    // min_attendance_pct = 75%; strictly below means < 75
+    $course = Course::factory()->create([
+        'department_id' => $dept->id,
+        'min_attendance_pct' => 75.00,
+    ]);
+
+    // Student A: 3/4 = 75% — exactly at the minimum, NOT a defaulter
+    $studentA = Student::factory()->create(['department_id' => $dept->id]);
+    $enrollmentA = createStudentWithAttendance($studentA, $course, sessionCount: 4, attendedCount: 3);
+
+    // Student B: 2/4 = 50% < 75% — IS a defaulter
+    $studentB = Student::factory()->create(['department_id' => $dept->id]);
+    $enrollmentB = createStudentWithAttendance($studentB, $course, sessionCount: 4, attendedCount: 2);
+
+    $this->actingAs($admin);
+
+    livewire(DefaulterListPage::class)
+        ->assertCanSeeTableRecords([$enrollmentB])
+        ->assertCanNotSeeTableRecords([$enrollmentA]);
+});
+
+test('notify_action_dispatches_absence_notifications_job', function () {
+    Queue::fake();
+
+    $dept = Department::factory()->create();
+    $admin = adminForDefaulters($dept);
+
+    $course = Course::factory()->create([
+        'department_id' => $dept->id,
+        'min_attendance_pct' => 75.00,
+    ]);
+
+    // 1/4 sessions attended = 25%, well below 75%
+    $student = Student::factory()->create(['department_id' => $dept->id]);
+    createStudentWithAttendance($student, $course, sessionCount: 4, attendedCount: 1);
+
+    $this->actingAs($admin);
+
+    livewire(DefaulterListPage::class)
+        ->callAction('notify')
+        ->assertNotified();
+
+    Queue::assertPushed(SendAbsenceNotifications::class, function (SendAbsenceNotifications $job) use ($student, $course) {
+        return in_array($student->id, $job->studentIds, true)
+            && $job->courseId === $course->id;
+    });
+});
