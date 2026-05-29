@@ -88,13 +88,36 @@ test('defaulter_list_only_shows_students_below_minimum_attendance', function () 
         'min_attendance_pct' => 75.00,
     ]);
 
+    // Shared sessions — both students are measured against the same 4 closed sessions.
+    // Using createStudentWithAttendance twice would create 8 sessions total (4 per call),
+    // making total_sessions=8 for both and skewing the percentages.
+    $faculty = Faculty::factory()->create();
+    $sessions = AttendanceSession::factory()->count(4)->closed()->create([
+        'course_id' => $course->id,
+        'faculty_id' => $faculty->id,
+    ]);
+
     // Student A: 3/4 = 75% — exactly at the minimum, NOT a defaulter
     $studentA = Student::factory()->create(['department_id' => $dept->id]);
-    $enrollmentA = createStudentWithAttendance($studentA, $course, sessionCount: 4, attendedCount: 3);
+    $enrollmentA = Enrollment::factory()->create(['student_id' => $studentA->id, 'course_id' => $course->id]);
+    foreach ($sessions->take(3) as $session) {
+        AttendanceRecord::factory()->present()->create([
+            'attendance_session_id' => $session->id,
+            'student_id' => $studentA->id,
+            'enrollment_id' => $enrollmentA->id,
+        ]);
+    }
 
     // Student B: 2/4 = 50% < 75% — IS a defaulter
     $studentB = Student::factory()->create(['department_id' => $dept->id]);
-    $enrollmentB = createStudentWithAttendance($studentB, $course, sessionCount: 4, attendedCount: 2);
+    $enrollmentB = Enrollment::factory()->create(['student_id' => $studentB->id, 'course_id' => $course->id]);
+    foreach ($sessions->take(2) as $session) {
+        AttendanceRecord::factory()->present()->create([
+            'attendance_session_id' => $session->id,
+            'student_id' => $studentB->id,
+            'enrollment_id' => $enrollmentB->id,
+        ]);
+    }
 
     $this->actingAs($admin);
 
