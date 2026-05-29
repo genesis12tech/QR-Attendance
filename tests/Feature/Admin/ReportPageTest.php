@@ -80,5 +80,6 @@ test('report_form_requires_date_range', function () {
             'format' => ExportFormat::Pdf->value,
         ])
         ->call('generateReport')
-        ->assertHasFormErrors(['from' => 'required', 'to' => 'required']);
+        ->assertHasFormErrors(['from' => 'required', 'to' => 'required'])
+        ->assertNotNotified();
 });
