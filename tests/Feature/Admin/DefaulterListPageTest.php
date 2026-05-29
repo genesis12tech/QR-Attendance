@@ -40,6 +40,11 @@ function adminForDefaulters(Department $department): User
  * Creates $sessionCount closed sessions for the given course, then creates
  * $attendedCount present records for the given student+enrollment.
  * Returns the created enrollment.
+ *
+ * WARNING: Each call creates its own sessions for the course. If you call this
+ * for two students on the same course, total_sessions will double (e.g. 8 not 4),
+ * making percentage assertions unreliable. For multi-student percentage tests,
+ * create shared sessions manually and record attendance inline instead.
  */
 function createStudentWithAttendance(
     Student $student,

@@ -41,6 +41,9 @@ class DefaulterListPage extends Page implements HasTable
 
     public function table(Table $table): Table
     {
+        // $ids is captured at component mount from the 5-minute cache; the table
+        // reflects that snapshot for the page lifetime. A page refresh picks up
+        // any cache expiry.
         $ids = $this->getDefaulterEnrollmentIds();
 
         return $table
@@ -61,6 +64,7 @@ class DefaulterListPage extends Page implements HasTable
                             INNER JOIN attendance_sessions ON attendance_records.attendance_session_id = attendance_sessions.id
                             WHERE attendance_records.student_id = enrollments.student_id
                             AND attendance_sessions.course_id = enrollments.course_id
+                            AND attendance_sessions.status = "closed"
                             AND attendance_records.status IN ("present", "late")
                         ) AS attended_sessions'),
                     ])
@@ -147,6 +151,10 @@ class DefaulterListPage extends Page implements HasTable
     protected function getDefaulterData(): array
     {
         $departmentId = auth()->user()?->activeAdminAssignment?->department_id;
+
+        if ($departmentId === null) {
+            return [];
+        }
 
         return Cache::remember("defaulters.dept.{$departmentId}", 300, function () use ($departmentId) {
             return Enrollment::query()
