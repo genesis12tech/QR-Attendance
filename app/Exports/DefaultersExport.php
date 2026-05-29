@@ -2,12 +2,9 @@
 
 namespace App\Exports;
 
-use App\Enums\AttendanceStatus;
-use App\Enums\SessionStatus;
-use App\Models\AttendanceRecord;
-use App\Models\AttendanceSession;
 use App\Models\Enrollment;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -22,19 +19,27 @@ class DefaultersExport implements FromCollection, WithHeadings
     {
         return Enrollment::whereIn('id', $this->enrollmentIds)
             ->with(['student.user', 'course'])
+            ->addSelect([
+                'enrollments.*',
+                DB::raw('(
+                    SELECT COUNT(*)
+                    FROM attendance_sessions
+                    WHERE attendance_sessions.course_id = enrollments.course_id
+                    AND attendance_sessions.status = "closed"
+                ) AS total_sessions'),
+                DB::raw('(
+                    SELECT COUNT(*)
+                    FROM attendance_records
+                    INNER JOIN attendance_sessions ON attendance_records.attendance_session_id = attendance_sessions.id
+                    WHERE attendance_records.student_id = enrollments.student_id
+                    AND attendance_sessions.course_id = enrollments.course_id
+                    AND attendance_records.status IN ("present", "late")
+                ) AS attended_sessions'),
+            ])
             ->get()
             ->map(function (Enrollment $enrollment) {
-                $total = AttendanceSession::where('course_id', $enrollment->course_id)
-                    ->where('status', SessionStatus::Closed->value)
-                    ->count();
-
-                $attended = $total > 0
-                    ? AttendanceRecord::where('student_id', $enrollment->student_id)
-                        ->whereHas('session', fn ($q) => $q->where('course_id', $enrollment->course_id))
-                        ->whereIn('status', [AttendanceStatus::Present->value, AttendanceStatus::Late->value])
-                        ->count()
-                    : 0;
-
+                $total = (int) $enrollment->total_sessions;
+                $attended = (int) $enrollment->attended_sessions;
                 $pct = $total > 0 ? round($attended / $total * 100, 1) : 0;
 
                 return [
@@ -42,7 +47,7 @@ class DefaultersExport implements FromCollection, WithHeadings
                     'course' => $enrollment->course->code ?? '',
                     'attended_total' => "{$attended}/{$total}",
                     'attendance_pct' => $pct.'%',
-                    'minimum_pct' => $enrollment->course->min_attendance_pct.'%',
+                    'minimum_pct' => number_format((float) $enrollment->course->min_attendance_pct, 1).'%',
                 ];
             });
     }
