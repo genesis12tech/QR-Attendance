@@ -22,6 +22,15 @@ class SecurityPolicyFactory extends Factory
             'device_binding_required' => true,
             'clock_skew_seconds' => 5,
             'is_active' => true,
+            'w_gps' => 20,
+            'w_device' => 20,
+            'w_clock_skew' => 20,
+            'w_wifi' => 20,
+            'w_beacon' => 20,
+            'w_ip_cluster' => 20,
+            'w_speed' => 20,
+            'w_peer_scan' => 20,
+            'w_biometric' => 20,
         ];
     }
 }

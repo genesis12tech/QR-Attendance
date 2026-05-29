@@ -21,6 +21,15 @@ class SecurityPolicy extends Model
         'device_binding_required',
         'clock_skew_seconds',
         'is_active',
+        'w_gps',
+        'w_device',
+        'w_clock_skew',
+        'w_wifi',
+        'w_beacon',
+        'w_ip_cluster',
+        'w_speed',
+        'w_peer_scan',
+        'w_biometric',
     ];
 
     protected function casts(): array
