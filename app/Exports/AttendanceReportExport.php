@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use App\Enums\AttendanceStatus;
 use App\Models\AttendanceRecord;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromQuery;
@@ -32,7 +31,7 @@ class AttendanceReportExport implements FromQuery, WithHeadings, WithMapping
             $row->student?->roll_no ?? '—',
             $row->session?->course?->code ?? '—',
             $row->session?->started_at?->format('Y-m-d') ?? '—',
-            $row->status instanceof AttendanceStatus ? $row->status->value : (string) $row->status,
+            $row->status->value,
             $row->marked_at?->format('Y-m-d H:i') ?? '—',
             $row->risk_score,
         ];

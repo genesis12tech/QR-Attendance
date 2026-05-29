@@ -42,7 +42,7 @@
                 <td>{{ $record->student?->roll_no ?? '—' }}</td>
                 <td>{{ $record->session?->course?->code ?? '—' }}</td>
                 <td>{{ $record->session?->started_at?->format('Y-m-d') ?? '—' }}</td>
-                <td>{{ $record->status instanceof \App\Enums\AttendanceStatus ? $record->status->value : $record->status }}</td>
+                <td>{{ $record->status->value }}</td>
                 <td>{{ $record->marked_at?->format('Y-m-d H:i') ?? '—' }}</td>
                 <td>{{ $record->risk_score }}</td>
             </tr>

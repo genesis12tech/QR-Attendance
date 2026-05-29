@@ -5,7 +5,11 @@ use App\Jobs\GenerateAttendanceReport;
 use App\Models\SessionExport;
 use App\Models\User;
 use Filament\Notifications\Notification;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
+
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('local');
@@ -65,7 +69,7 @@ it('sets status to failed when failed() is called', function () {
         requestedBy: $user->id,
     );
 
-    $job->failed(new \Exception('Something went wrong'));
+    $job->failed(new Exception('Something went wrong'));
 
     expect($export->fresh()->status)->toBe(ExportStatus::Failed);
 });
@@ -88,4 +92,15 @@ it('generates an xlsx file for xlsx format', function () {
 
     Storage::disk('local')->assertExists($export->file_path);
     expect(pathinfo($export->file_path, PATHINFO_EXTENSION))->toBe('xlsx');
+});
+
+it('sends a success notification to the requesting user on completion', function () {
+    $job = makeReportJob('pdf');
+    $job->handle();
+
+    $user = User::find($job->requestedBy);
+
+    Notification::assertSentTo($user, function ($notification) {
+        return $notification->getTitle() === 'Report ready';
+    });
 });
