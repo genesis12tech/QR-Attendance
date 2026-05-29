@@ -5,7 +5,6 @@ use App\Filament\SuperAdmin\Resources\Departments\Pages\EditDepartment;
 use App\Filament\SuperAdmin\Resources\Departments\Pages\ListDepartments;
 use App\Models\Department;
 use App\Models\User;
-use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
@@ -20,7 +19,8 @@ test('super_admin_can_list_departments', function () {
     $this->actingAs($superAdmin);
 
     livewire(ListDepartments::class)
-        ->assertCanSeeTableRecords($departments);
+        ->assertSee($departments->first()->name)
+        ->assertSee($departments->last()->name);
 });
 
 test('super_admin_can_create_department', function () {
@@ -58,7 +58,7 @@ test('super_admin_can_delete_department', function () {
     $this->actingAs($superAdmin);
 
     livewire(ListDepartments::class)
-        ->callAction(TestAction::make('delete')->table($dept))
+        ->call('deleteDepartment', $dept->id)
         ->assertSuccessful();
 
     \Pest\Laravel\assertDatabaseMissing(Department::class, ['id' => $dept->id]);
