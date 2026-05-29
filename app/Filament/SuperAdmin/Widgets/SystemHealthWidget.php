@@ -24,6 +24,11 @@ class SystemHealthWidget extends Widget
             'lastRetentionRun' => $lastRetentionRun,
             'redisConnected' => $redisConnected,
             'queueWorkerRunning' => true,
+            // Security posture checklist
+            'deviceBindingEnabled' => $policy?->device_binding_required === true,
+            'autoRejectConfigured' => ($policy?->risk_auto_reject ?? 0) >= 50,
+            'geofenceConfigured' => ($policy?->geofence_radius_m ?? 0) > 0,
+            'qrExpiryShort' => ($policy?->qr_expiry_seconds ?? PHP_INT_MAX) <= 60,
         ];
     }
 

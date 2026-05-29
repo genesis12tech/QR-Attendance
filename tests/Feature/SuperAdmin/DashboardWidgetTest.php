@@ -6,6 +6,7 @@ use App\Filament\SuperAdmin\Widgets\SystemHealthWidget;
 use App\Models\AttendanceSession;
 use App\Models\AuditLog;
 use App\Models\ProxyFlag;
+use App\Models\SecurityPolicy;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -78,4 +79,24 @@ test('recent_audit_feed_widget_renders', function () {
 
     livewire(RecentAuditFeedWidget::class)
         ->assertSuccessful();
+});
+
+test('system_health_widget_shows_security_posture_checklist', function () {
+    $superAdmin = User::factory()->superAdmin()->create();
+
+    SecurityPolicy::factory()->create([
+        'device_binding_required' => true,
+        'risk_auto_reject' => 80,
+        'geofence_radius_m' => 50,
+        'qr_expiry_seconds' => 30,
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($superAdmin);
+
+    livewire(SystemHealthWidget::class)
+        ->assertSee('Device Binding')
+        ->assertSee('Auto-Reject Threshold')
+        ->assertSee('Geofence')
+        ->assertSee('QR Expiry');
 });
