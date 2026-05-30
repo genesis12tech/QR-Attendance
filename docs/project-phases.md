@@ -1238,7 +1238,7 @@ Actions: `ViewEvidenceAction`. `AllowAction` / `DenyAction` only if
 - `test_allow_deny_actions_visible_when_policy_permits()`
 - `test_allow_deny_actions_hidden_when_policy_disallows()`
 
-### Phase 5.5 — AttendanceRecordResource (Faculty, Read-Only) ⬜
+### Phase 5.5 — AttendanceRecordResource (Faculty, Read-Only) ✅
 
 `app/Filament/Faculty/Resources/AttendanceRecordResource.php`
 
@@ -1251,7 +1251,7 @@ No override action. Filters: `SelectFilter(status)`, `SelectFilter(session)`.
 - `test_faculty_cannot_see_records_from_other_sessions()`
 - `test_faculty_has_no_override_action()`
 
-### Phase 5.6 — SessionExportResource ⬜
+### Phase 5.6 — SessionExportResource ✅
 
 `app/Filament/Faculty/Resources/SessionExportResource.php`
 
@@ -1265,7 +1265,7 @@ Actions: `DownloadAction` (generates signed URL if `status=ready`, else shows "P
 - `test_download_action_shows_processing_message_when_pending()`
 - `test_faculty_can_delete_export()`
 
-### Phase 5.7 — Faculty Dashboard Widgets ⬜
+### Phase 5.7 — Faculty Dashboard Widgets ✅
 
 `app/Filament/Faculty/Widgets/`
 
@@ -1293,7 +1293,7 @@ Per-flag: student name, risk score, reason code, Allow/Deny buttons. Shown only 
 
 ## Phase 6: Background Jobs
 
-### Phase 6.1 — GenerateAttendanceReport Job ⬜
+### Phase 6.1 — GenerateAttendanceReport Job ✅
 
 `app/Jobs/GenerateAttendanceReport.php`
 
@@ -1418,8 +1418,8 @@ Rate limiting: `throttle:10,1` per student.
 | 2 — Core Services | 2.1–2.4 | ✅✅✅✅ |
 | 3 — Super Admin Panel | 3.1–3.8 | ✅✅✅✅✅✅✅✅ |
 | 4 — Admin Panel | 4.1–4.11 | ✅✅✅✅✅✅✅✅✅✅✅ |
-| 5 — Faculty Panel | 5.1–5.7 | ✅✅✅✅⬜⬜⬜ |
-| 6 — Background Jobs | 6.1–6.3 | ⬜⬜⬜ |
+| 5 — Faculty Panel | 5.1–5.7 | ✅✅✅✅✅✅✅ |
+| 6 — Background Jobs | 6.1–6.3 | ✅⬜⬜ |
 | 7 — Student REST API | 7.1–7.3 | ⬜⬜⬜ |
 
 **Total tasks:** 45 (2 complete, 1 partial, 42 pending)
