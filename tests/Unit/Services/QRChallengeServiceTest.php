@@ -89,8 +89,12 @@ test('validate_scan_allows_clock_skew_within_policy_tolerance', function () {
 
 function makeQrPayload(string $sessionUuid, int $issuedAt): string
 {
-    $inner = ['session_uuid' => $sessionUuid, 'nonce' => 'test-nonce', 'issued_at' => $issuedAt];
+    $nonce = 'test-nonce-'.str_replace(['.', ' '], '-', microtime());
+    $inner = ['session_uuid' => $sessionUuid, 'nonce' => $nonce, 'issued_at' => $issuedAt];
     $hmac = hash_hmac('sha256', json_encode($inner), config('services.qr_secret'));
+    $payload = base64_encode(json_encode(array_merge($inner, ['hmac' => $hmac])));
 
-    return base64_encode(json_encode(array_merge($inner, ['hmac' => $hmac])));
+    Cache::put("qr:{$sessionUuid}:{$nonce}", $payload, 60);
+
+    return $payload;
 }

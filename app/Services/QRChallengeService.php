@@ -49,6 +49,11 @@ class QRChallengeService
             return false;
         }
 
+        $cacheKey = "qr:{$data['session_uuid']}:{$data['nonce']}";
+        if (! Cache::pull($cacheKey)) {
+            return false;
+        }
+
         $policy = SecurityPolicy::getActive();
         $window = $policy->qr_expiry_seconds + $policy->clock_skew_seconds;
 

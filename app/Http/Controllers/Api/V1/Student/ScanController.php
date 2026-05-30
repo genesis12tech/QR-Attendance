@@ -22,8 +22,11 @@ class ScanController extends Controller
             'longitude' => ['required', 'numeric'],
         ]);
 
+        $student = $request->user()->student;
+        abort_unless($student !== null, 403, 'No student profile associated with this account.');
+
         $result = $this->scanService->scan(
-            student: $request->user()->student,
+            student: $student,
             qrPayload: $data['qr_payload'],
             deviceFingerprint: $data['device_fingerprint'],
             latitude: (float) $data['latitude'],
