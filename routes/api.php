@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Student\AttendanceController;
 use App\Http\Controllers\Api\V1\Student\AuthController;
 use App\Http\Controllers\Api\V1\Student\DeviceController;
 use App\Http\Controllers\Api\V1\Student\ScanController;
@@ -15,6 +16,8 @@ Route::prefix('v1/student')->group(function () {
         Route::get('devices', [DeviceController::class, 'index']);
         Route::post('devices', [DeviceController::class, 'store']);
         Route::delete('devices/{device}', [DeviceController::class, 'destroy']);
+        Route::get('attendance', [AttendanceController::class, 'index']);
+        Route::get('attendance/summary', [AttendanceController::class, 'summary']);
     });
 
     Route::middleware(['auth:sanctum', 'throttle:10,1'])->group(function () {

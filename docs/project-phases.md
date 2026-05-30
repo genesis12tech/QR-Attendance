@@ -1397,7 +1397,7 @@ Rate limiting: `throttle:10,1` per student.
 - `test_duplicate_scan_for_same_session_is_rejected()`
 - `test_scan_broadcasts_attendance_marked_event()`
 
-### Phase 7.3 — Attendance History Endpoint ⬜
+### Phase 7.3 — Attendance History Endpoint ✅
 
 `GET /api/v1/student/attendance` — paginated list of own records with session + course info.
 `GET /api/v1/student/attendance/summary` — per-course: attended, total, percentage, minimum.
@@ -1420,6 +1420,6 @@ Rate limiting: `throttle:10,1` per student.
 | 4 — Admin Panel | 4.1–4.11 | ✅✅✅✅✅✅✅✅✅✅✅ |
 | 5 — Faculty Panel | 5.1–5.7 | ✅✅✅✅✅✅✅ |
 | 6 — Background Jobs | 6.1–6.3 | ✅✅✅ |
-| 7 — Student REST API | 7.1–7.3 | ✅✅⬜ |
+| 7 — Student REST API | 7.1–7.3 | ✅✅✅ |
 
-**Total tasks:** 45 (2 complete, 1 partial, 42 pending)
+**Total tasks:** 45 (all complete)
