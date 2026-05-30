@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1\Student;
 
-use App\Enums\AttendanceStatus;
 use App\Enums\EnrollmentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceRecord;
 use App\Models\Enrollment;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AttendanceController extends Controller
 {
@@ -59,18 +59,31 @@ class AttendanceController extends Controller
         $enrollments = Enrollment::where('student_id', $student->id)
             ->where('status', EnrollmentStatus::Active)
             ->with('course')
+            ->addSelect([
+                'enrollments.*',
+                DB::raw('(
+                    SELECT COUNT(*)
+                    FROM attendance_records
+                    INNER JOIN attendance_sessions
+                        ON attendance_records.session_id = attendance_sessions.id
+                    WHERE attendance_records.student_id = enrollments.student_id
+                      AND attendance_sessions.course_id = enrollments.course_id
+                ) AS total_sessions'),
+                DB::raw("(
+                    SELECT COUNT(*)
+                    FROM attendance_records
+                    INNER JOIN attendance_sessions
+                        ON attendance_records.session_id = attendance_sessions.id
+                    WHERE attendance_records.student_id = enrollments.student_id
+                      AND attendance_sessions.course_id = enrollments.course_id
+                      AND attendance_records.status IN ('present', 'late')
+                ) AS attended_sessions"),
+            ])
             ->get();
 
-        $summary = $enrollments->map(function (Enrollment $enrollment) use ($student) {
-            $total = AttendanceRecord::where('student_id', $student->id)
-                ->whereHas('session', fn ($q) => $q->where('course_id', $enrollment->course_id))
-                ->count();
-
-            $attended = AttendanceRecord::where('student_id', $student->id)
-                ->whereIn('status', [AttendanceStatus::Present->value, AttendanceStatus::Late->value])
-                ->whereHas('session', fn ($q) => $q->where('course_id', $enrollment->course_id))
-                ->count();
-
+        $summary = $enrollments->map(function (Enrollment $enrollment) {
+            $total = (int) $enrollment->total_sessions;
+            $attended = (int) $enrollment->attended_sessions;
             $percentage = $total > 0 ? round($attended / $total * 100, 2) : 0.0;
             $minimumPct = (float) $enrollment->course->min_attendance_pct;
 

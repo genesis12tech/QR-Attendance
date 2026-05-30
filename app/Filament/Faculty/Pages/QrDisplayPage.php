@@ -114,17 +114,17 @@ class QrDisplayPage extends Page
                 ->color('danger')
                 ->requiresConfirmation()
                 ->action(function (): void {
-                    $session = AttendanceSession::find($this->sessionId);
+                    $affected = AttendanceSession::where('id', $this->sessionId)
+                        ->where('status', SessionStatus::Active)
+                        ->update(['status' => SessionStatus::Closed, 'closed_at' => now()]);
 
-                    if (! $session) {
+                    if (! $affected) {
+                        $this->redirect(ListAttendanceSessions::getUrl());
+
                         return;
                     }
 
-                    $session->update([
-                        'status' => SessionStatus::Closed,
-                        'closed_at' => now(),
-                    ]);
-
+                    $session = AttendanceSession::find($this->sessionId);
                     FinalizeAttendanceSession::dispatch($session);
 
                     Notification::make()->title('Session closed')->success()->send();

@@ -31,6 +31,7 @@ function buildQrPayload(AttendanceSession $session, ?int $issuedAt = null): stri
     $nonce = (string) Str::uuid();
     $issuedAt ??= now()->timestamp;
     $inner = ['session_uuid' => $session->uuid, 'nonce' => $nonce, 'issued_at' => $issuedAt];
+    ksort($inner);
     $hmac = hash_hmac('sha256', json_encode($inner), config('services.qr_secret'));
     $payload = base64_encode(json_encode(array_merge($inner, ['hmac' => $hmac])));
 

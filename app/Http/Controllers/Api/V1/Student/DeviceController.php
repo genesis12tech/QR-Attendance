@@ -7,6 +7,7 @@ use App\Models\DeviceRegistration;
 use App\Models\SystemSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class DeviceController extends Controller
@@ -28,22 +29,26 @@ class DeviceController extends Controller
         ]);
 
         $maxDevices = (int) SystemSetting::get('max_devices_per_student', '1');
-        $currentCount = DeviceRegistration::where('user_id', $request->user()->id)->count();
+        $userId = $request->user()->id;
 
-        if ($currentCount >= $maxDevices) {
-            throw ValidationException::withMessages([
-                'device_fingerprint' => ["You have reached the maximum of {$maxDevices} registered device(s)."],
+        $device = DB::transaction(function () use ($data, $userId, $maxDevices) {
+            $currentCount = DeviceRegistration::where('user_id', $userId)->lockForUpdate()->count();
+
+            if ($currentCount >= $maxDevices) {
+                throw ValidationException::withMessages([
+                    'device_fingerprint' => ["You have reached the maximum of {$maxDevices} registered device(s)."],
+                ]);
+            }
+
+            return DeviceRegistration::create([
+                'user_id' => $userId,
+                'device_fingerprint' => $data['device_fingerprint'],
+                'device_name' => $data['device_name'] ?? null,
+                'platform' => $data['platform'] ?? null,
+                'app_version' => $data['app_version'] ?? null,
+                'last_seen_at' => now(),
             ]);
-        }
-
-        $device = DeviceRegistration::create([
-            'user_id' => $request->user()->id,
-            'device_fingerprint' => $data['device_fingerprint'],
-            'device_name' => $data['device_name'] ?? null,
-            'platform' => $data['platform'] ?? null,
-            'app_version' => $data['app_version'] ?? null,
-            'last_seen_at' => now(),
-        ]);
+        });
 
         return response()->json($device, 201);
     }

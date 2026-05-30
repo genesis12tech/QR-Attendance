@@ -3,7 +3,6 @@
 namespace App\Filament\Faculty\Widgets;
 
 use App\Enums\ReviewStatus;
-use App\Models\AttendanceRecord;
 use App\Models\AttendanceSession;
 use App\Models\ProxyFlag;
 use App\Models\Timetable;
@@ -11,6 +10,7 @@ use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class FacultyStatsOverviewWidget extends StatsOverviewWidget
 {
@@ -29,19 +29,15 @@ class FacultyStatsOverviewWidget extends StatsOverviewWidget
                 ->color('info'),
 
             Stat::make('7-Day Avg Attendance', Cache::remember("faculty_stat.avg_attendance.{$facultyId}", 60, function () use ($facultyId) {
-                $total = AttendanceRecord::whereHas(
-                    'session',
-                    fn ($q) => $q->where('faculty_id', $facultyId)
-                        ->where('started_at', '>=', Carbon::now()->subDays(7))
-                )->count();
+                $row = DB::table('attendance_records as ar')
+                    ->join('attendance_sessions as s', 's.id', '=', 'ar.session_id')
+                    ->where('s.faculty_id', $facultyId)
+                    ->where('s.started_at', '>=', Carbon::now()->subDays(7))
+                    ->selectRaw("COUNT(*) as total, SUM(CASE WHEN ar.status IN ('present', 'late') THEN 1 ELSE 0 END) as present_count")
+                    ->first();
 
-                $present = AttendanceRecord::whereHas(
-                    'session',
-                    fn ($q) => $q->where('faculty_id', $facultyId)
-                        ->where('started_at', '>=', Carbon::now()->subDays(7))
-                )
-                    ->whereIn('status', ['present', 'late'])
-                    ->count();
+                $total = (int) ($row->total ?? 0);
+                $present = (int) ($row->present_count ?? 0);
 
                 if ($total === 0) {
                     return '—';

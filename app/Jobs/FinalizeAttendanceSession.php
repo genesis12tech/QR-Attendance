@@ -41,14 +41,19 @@ class FinalizeAttendanceSession implements ShouldQueue
 
             $absentStudentIds = $enrolledStudentIds->diff($presentStudentIds);
 
-            foreach ($absentStudentIds as $studentId) {
-                AttendanceRecord::create([
-                    'session_id' => $session->id,
-                    'student_id' => $studentId,
-                    'status' => AttendanceStatus::Absent,
-                    'marked_at' => now(),
-                    'risk_score' => 0,
-                ]);
+            if ($absentStudentIds->isNotEmpty()) {
+                $now = now();
+                DB::table('attendance_records')->insertOrIgnore(
+                    $absentStudentIds->map(fn ($studentId) => [
+                        'session_id' => $session->id,
+                        'student_id' => $studentId,
+                        'status' => AttendanceStatus::Absent->value,
+                        'marked_at' => $now,
+                        'risk_score' => 0,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ])->all()
+                );
             }
 
             $totals = AttendanceRecord::where('session_id', $session->id)

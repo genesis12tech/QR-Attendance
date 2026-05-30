@@ -9,6 +9,7 @@ Route::get('/', function () {
 });
 
 Route::get('/session-exports/{export}/download', function (SessionExport $export) {
+    abort_unless($export->requested_by === auth()->id(), 403);
     abort_unless(
         $export->file_path && Storage::exists($export->file_path),
         404

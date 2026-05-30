@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Student;
 
 use App\Enums\UserRole;
+use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\User;
@@ -62,6 +63,18 @@ class AuthController extends Controller
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ])->status(401);
+        }
+
+        if ($user->role !== UserRole::Student) {
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials are incorrect.'],
+            ])->status(401);
+        }
+
+        if ($user->status === UserStatus::Suspended) {
+            throw ValidationException::withMessages([
+                'email' => ['Your account has been suspended.'],
+            ])->status(403);
         }
 
         $token = $user->createToken('student-app')->plainTextToken;

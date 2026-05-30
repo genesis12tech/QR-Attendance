@@ -133,26 +133,33 @@ class AttendanceRecordTable
     {
         $evidence = $record->evidence_json ?? [];
         $html = '<div class="space-y-3 text-sm">';
+        $hasContent = false;
 
-        if (isset($evidence['latitude'], $evidence['longitude'])) {
-            $html .= '<p class="font-semibold">GPS Location</p>';
-            $html .= '<p>Lat: '.e($evidence['latitude']).', Lng: '.e($evidence['longitude']).'</p>';
+        if (isset($evidence['gps_distance_m'])) {
+            $hasContent = true;
+            $html .= '<p class="font-semibold">GPS Distance from Room</p>';
+            $html .= '<p>'.e(number_format((float) $evidence['gps_distance_m'], 1)).' m</p>';
         }
 
-        if (isset($evidence['device'])) {
-            $html .= '<p class="font-semibold mt-2">Device Info</p>';
-            $html .= '<pre class="text-xs bg-gray-50 p-2 rounded">'.e(json_encode($evidence['device'], JSON_PRETTY_PRINT)).'</pre>';
+        if (isset($evidence['device_trusted'])) {
+            $hasContent = true;
+            $html .= '<p class="font-semibold mt-2">Device</p>';
+            $html .= '<p>Trusted: '.($evidence['device_trusted'] ? 'Yes' : 'No').'</p>';
         }
 
-        $riskKeys = ['risk_score', 'clock_skew', 'distance_m', 'device_match'];
-        $riskData = array_intersect_key($evidence, array_flip($riskKeys));
-
-        if (! empty($riskData)) {
-            $html .= '<p class="font-semibold mt-2">Risk Breakdown</p>';
-            $html .= '<pre class="text-xs bg-gray-50 p-2 rounded">'.e(json_encode($riskData, JSON_PRETTY_PRINT)).'</pre>';
+        if (isset($evidence['qr_age_seconds'])) {
+            $hasContent = true;
+            $html .= '<p class="font-semibold mt-2">QR Age</p>';
+            $html .= '<p>'.e($evidence['qr_age_seconds']).' seconds</p>';
         }
 
-        if (empty($evidence)) {
+        if (isset($evidence['weights'])) {
+            $hasContent = true;
+            $html .= '<p class="font-semibold mt-2">Risk Weights</p>';
+            $html .= '<pre class="text-xs bg-gray-50 p-2 rounded">'.e(json_encode($evidence['weights'], JSON_PRETTY_PRINT)).'</pre>';
+        }
+
+        if (! $hasContent) {
             $html .= '<p class="text-gray-500">No evidence data available.</p>';
         }
 

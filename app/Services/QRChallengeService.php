@@ -16,7 +16,8 @@ class QRChallengeService
         $nonce = Str::uuid()->toString();
         $issuedAt = now()->timestamp;
 
-        $inner = ['session_uuid' => $session->uuid, 'nonce' => $nonce, 'issued_at' => $issuedAt];
+        $inner = ['issued_at' => $issuedAt, 'nonce' => $nonce, 'session_uuid' => $session->uuid];
+        ksort($inner);
         $hmac = hash_hmac('sha256', json_encode($inner), config('services.qr_secret'));
         $encoded = base64_encode(json_encode(array_merge($inner, ['hmac' => $hmac])));
 
@@ -43,6 +44,7 @@ class QRChallengeService
 
         $hmac = $data['hmac'];
         unset($data['hmac']);
+        ksort($data);
         $expected = hash_hmac('sha256', json_encode($data), config('services.qr_secret'));
 
         if (! hash_equals($expected, $hmac)) {

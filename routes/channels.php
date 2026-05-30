@@ -27,7 +27,7 @@ Broadcast::channel('session.{sessionUuid}', function ($user, string $sessionUuid
     }
 
     if ($user->role === UserRole::Admin) {
-        return $user->activeAdminAssignment?->department_id === $session->course->department_id;
+        return $user->activeAdminAssignment?->department_id === $session->course?->department_id;
     }
 
     return false;

@@ -67,8 +67,8 @@ class AttendanceScanService
                 throw ValidationException::withMessages(['qr_payload' => ['Student is not enrolled in this course.']]);
             }
 
-            // Step 5 — Duplicate check
-            if (AttendanceRecord::where('session_id', $session->id)->where('student_id', $student->id)->exists()) {
+            // Step 5 — Duplicate check (lockForUpdate prevents concurrent scans from both passing)
+            if (AttendanceRecord::where('session_id', $session->id)->where('student_id', $student->id)->lockForUpdate()->exists()) {
                 throw ValidationException::withMessages(['qr_payload' => ['Attendance already recorded for this session.']]);
             }
 
