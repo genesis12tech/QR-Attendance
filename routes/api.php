@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Student\AuthController;
 use App\Http\Controllers\Api\V1\Student\DeviceController;
+use App\Http\Controllers\Api\V1\Student\ScanController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1/student')->group(function () {
@@ -14,5 +15,9 @@ Route::prefix('v1/student')->group(function () {
         Route::get('devices', [DeviceController::class, 'index']);
         Route::post('devices', [DeviceController::class, 'store']);
         Route::delete('devices/{device}', [DeviceController::class, 'destroy']);
+    });
+
+    Route::middleware(['auth:sanctum', 'throttle:10,1'])->group(function () {
+        Route::post('attendance/scan', [ScanController::class, 'store']);
     });
 });

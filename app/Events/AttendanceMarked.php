@@ -13,6 +13,8 @@ class AttendanceMarked implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    public bool $afterCommit = true;
+
     public function __construct(
         public readonly AttendanceSession $session,
         public readonly string $studentName,
