@@ -1,0 +1,72 @@
+<?php
+
+namespace App\Filament\Faculty\Widgets;
+
+use App\Enums\ReviewStatus;
+use App\Models\AttendanceRecord;
+use App\Models\AttendanceSession;
+use App\Models\ProxyFlag;
+use App\Models\Timetable;
+use Filament\Widgets\StatsOverviewWidget;
+use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
+
+class FacultyStatsOverviewWidget extends StatsOverviewWidget
+{
+    protected ?string $pollingInterval = '60s';
+
+    protected function getStats(): array
+    {
+        $facultyId = auth()->user()?->faculty?->id;
+
+        return [
+            Stat::make("Today's Sessions", Cache::remember("faculty_stat.today_sessions.{$facultyId}", 60, function () use ($facultyId) {
+                return AttendanceSession::where('faculty_id', $facultyId)
+                    ->whereDate('started_at', today())
+                    ->count();
+            }))
+                ->color('info'),
+
+            Stat::make('7-Day Avg Attendance', Cache::remember("faculty_stat.avg_attendance.{$facultyId}", 60, function () use ($facultyId) {
+                $total = AttendanceRecord::whereHas(
+                    'session',
+                    fn ($q) => $q->where('faculty_id', $facultyId)
+                        ->where('started_at', '>=', Carbon::now()->subDays(7))
+                )->count();
+
+                $present = AttendanceRecord::whereHas(
+                    'session',
+                    fn ($q) => $q->where('faculty_id', $facultyId)
+                        ->where('started_at', '>=', Carbon::now()->subDays(7))
+                )
+                    ->whereIn('status', ['present', 'late'])
+                    ->count();
+
+                if ($total === 0) {
+                    return '—';
+                }
+
+                return round(($present / $total) * 100, 1).'%';
+            }))
+                ->color('success'),
+
+            Stat::make('Open Proxy Flags', Cache::remember("faculty_stat.proxy_flags.{$facultyId}", 60, function () use ($facultyId) {
+                return ProxyFlag::where('review_status', ReviewStatus::Pending)
+                    ->whereHas(
+                        'attendanceRecord.session',
+                        fn ($q) => $q->where('faculty_id', $facultyId)
+                    )
+                    ->count();
+            }))
+                ->color('warning'),
+
+            Stat::make('My Courses', Cache::remember("faculty_stat.courses.{$facultyId}", 60, function () use ($facultyId) {
+                return Timetable::where('faculty_id', $facultyId)
+                    ->distinct('course_id')
+                    ->count('course_id');
+            }))
+                ->color('primary'),
+        ];
+    }
+}
