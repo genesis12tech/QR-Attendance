@@ -1311,7 +1311,7 @@ Implements `ShouldQueue`. `$tries = 3`, `backoff = [1, 5, 10]`. Implements `fail
 - `test_pdf_format_generates_pdf_file()`
 - `test_xlsx_format_generates_xlsx_file()`
 
-### Phase 6.2 — FinalizeAttendanceSession Job ⬜
+### Phase 6.2 — FinalizeAttendanceSession Job ✅
 
 `app/Jobs/FinalizeAttendanceSession.php`
 
@@ -1419,7 +1419,7 @@ Rate limiting: `throttle:10,1` per student.
 | 3 — Super Admin Panel | 3.1–3.8 | ✅✅✅✅✅✅✅✅ |
 | 4 — Admin Panel | 4.1–4.11 | ✅✅✅✅✅✅✅✅✅✅✅ |
 | 5 — Faculty Panel | 5.1–5.7 | ✅✅✅✅✅✅✅ |
-| 6 — Background Jobs | 6.1–6.3 | ✅⬜⬜ |
+| 6 — Background Jobs | 6.1–6.3 | ✅✅⬜ |
 | 7 — Student REST API | 7.1–7.3 | ⬜⬜⬜ |
 
 **Total tasks:** 45 (2 complete, 1 partial, 42 pending)
