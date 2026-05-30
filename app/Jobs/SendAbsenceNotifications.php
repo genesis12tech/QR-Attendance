@@ -2,11 +2,15 @@
 
 namespace App\Jobs;
 
+use App\Mail\AbsenceNotificationMail;
+use App\Models\Course;
+use App\Models\Student;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Mail;
 
 class SendAbsenceNotifications implements ShouldQueue
 {
@@ -27,11 +31,18 @@ class SendAbsenceNotifications implements ShouldQueue
 
     public function handle(): void
     {
-        // Phase 6.3 implementation
+        $course = Course::findOrFail($this->courseId);
+
+        Student::with('user')
+            ->whereIn('id', $this->studentIds)
+            ->get()
+            ->each(function (Student $student) use ($course): void {
+                if ($student->user?->email) {
+                    Mail::to($student->user->email)
+                        ->send(new AbsenceNotificationMail($student, $course));
+                }
+            });
     }
 
-    public function failed(\Throwable $exception): void
-    {
-        // Phase 6.3 implementation
-    }
+    public function failed(\Throwable $exception): void {}
 }
