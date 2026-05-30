@@ -1326,7 +1326,7 @@ Implements `ShouldQueue`, `$tries = 3`.
 - `test_job_updates_session_totals_correctly()`
 - `test_job_writes_audit_log()`
 
-### Phase 6.3 — SendAbsenceNotifications Job ⬜
+### Phase 6.3 — SendAbsenceNotifications Job ✅
 
 `app/Jobs/SendAbsenceNotifications.php`
 
@@ -1419,7 +1419,7 @@ Rate limiting: `throttle:10,1` per student.
 | 3 — Super Admin Panel | 3.1–3.8 | ✅✅✅✅✅✅✅✅ |
 | 4 — Admin Panel | 4.1–4.11 | ✅✅✅✅✅✅✅✅✅✅✅ |
 | 5 — Faculty Panel | 5.1–5.7 | ✅✅✅✅✅✅✅ |
-| 6 — Background Jobs | 6.1–6.3 | ✅✅⬜ |
+| 6 — Background Jobs | 6.1–6.3 | ✅✅✅ |
 | 7 — Student REST API | 7.1–7.3 | ⬜⬜⬜ |
 
 **Total tasks:** 45 (2 complete, 1 partial, 42 pending)
