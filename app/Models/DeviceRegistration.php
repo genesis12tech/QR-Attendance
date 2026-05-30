@@ -14,17 +14,18 @@ class DeviceRegistration extends Model
     protected $fillable = [
         'user_id',
         'device_fingerprint',
-        'device_type',
+        'device_name',
         'platform',
-        'is_primary',
-        'registered_at',
+        'app_version',
+        'is_trusted',
+        'last_seen_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_primary' => 'boolean',
-            'registered_at' => 'datetime',
+            'is_trusted' => 'boolean',
+            'last_seen_at' => 'datetime',
         ];
     }
 

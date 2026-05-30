@@ -17,17 +17,18 @@ class DeviceRegistrationFactory extends Factory
         return [
             'user_id' => User::factory(),
             'device_fingerprint' => (string) Str::uuid(),
-            'device_type' => 'smartphone',
+            'device_name' => fake()->userAgent(),
             'platform' => 'android',
-            'is_primary' => false,
-            'registered_at' => now(),
+            'app_version' => '1.0.0',
+            'is_trusted' => false,
+            'last_seen_at' => now(),
         ];
     }
 
     public function trusted(): static
     {
         return $this->state(fn (array $attributes) => [
-            'is_primary' => true,
+            'is_trusted' => true,
         ]);
     }
 }
