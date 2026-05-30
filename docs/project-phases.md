@@ -1343,7 +1343,7 @@ Implements `ShouldQueue`. `$tries = 3`, `backoff = [1, 5, 10]`. Implements `fail
 
 ## Phase 7: Student REST API
 
-### Phase 7.1 — API Authentication & Device Registration ⬜
+### Phase 7.1 — API Authentication & Device Registration ✅
 
 Routes prefix: `/api/v1/student/`. Sanctum token auth.
 
@@ -1364,7 +1364,7 @@ Rate limiting: `throttle:60,1` on auth routes, `throttle:30,1` on device routes.
 - `test_registration_requires_unique_email()`
 - `test_login_fails_with_wrong_password()`
 
-### Phase 7.2 — QR Scan Endpoint ⬜
+### Phase 7.2 — QR Scan Endpoint ✅
 
 `POST /api/v1/student/attendance/scan`
 
@@ -1420,6 +1420,6 @@ Rate limiting: `throttle:10,1` per student.
 | 4 — Admin Panel | 4.1–4.11 | ✅✅✅✅✅✅✅✅✅✅✅ |
 | 5 — Faculty Panel | 5.1–5.7 | ✅✅✅✅✅✅✅ |
 | 6 — Background Jobs | 6.1–6.3 | ✅✅✅ |
-| 7 — Student REST API | 7.1–7.3 | ⬜⬜⬜ |
+| 7 — Student REST API | 7.1–7.3 | ✅✅⬜ |
 
 **Total tasks:** 45 (2 complete, 1 partial, 42 pending)
